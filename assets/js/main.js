@@ -407,6 +407,8 @@
     exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
     exitLiftMobile: 30,
     headerLogoAt: 0.40,      // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
+    conceptStagger: 0.035,   // コンセプト1行ずつの間隔
+    conceptStaggerNarrow: 0.03,
     conceptSnapFrom: 0.60    // ここから先で止めたら、コンセプトが出そろう位置まで送る
   };
 
@@ -482,6 +484,7 @@
     var scroll = hero.querySelector('.opening-hero__scroll');
     var overlay = hero.querySelector('.opening-hero__overlay');
     var concept = hero.querySelector('.opening-hero__concept');
+    var conceptLines = hero.querySelectorAll('.opening-hero__concept-line');
 
     function stay(reason) {
       if (reason) console.warn('opening hero: ' + reason);
@@ -543,6 +546,31 @@
 
     initHeaderLogoHandoff(hero);
 
+    /* 読み込み直後の登場。スクロール演出とぶつからないよう、
+       timeline が触らない子要素だけを動かす */
+    gsap.from(hero.querySelector('.opening-hero__logo img'), {
+      opacity: 0,
+      y: 20,
+      duration: 1.1,
+      ease: 'power2.out',
+      delay: .1
+    });
+    gsap.from(hero.querySelector('.opening-window__visual'), {
+      opacity: 0,
+      duration: 1.2,
+      ease: 'power2.out',
+      delay: .35
+    });
+    if (scroll) {
+      gsap.from(scroll.children, {
+        opacity: 0,
+        duration: .7,
+        stagger: .08,
+        ease: 'power2.out',
+        delay: .85
+      });
+    }
+
     var media = gsap.matchMedia();
 
     /* PC。中央から左に大きなロゴ、右下に切り抜き。
@@ -591,14 +619,21 @@
         }, .50)
         .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50)
 
-        /* Phase 5 — 風景の上でコンセプト文を読ませる */
+        /* Phase 5 — 風景の上でコンセプト文を1行ずつ読ませる */
         .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .13 }, .72)
-        .fromTo(concept,
-          { opacity: 0, y: 36 },
-          { opacity: 1, y: 0, ease: 'none', duration: .16 }, .76)
+        .set(concept, { opacity: 1 }, .74)
+        .fromTo(conceptLines,
+          { opacity: 0, y: 24 },
+          {
+            opacity: 1,
+            y: 0,
+            stagger: HERO_SETTINGS.conceptStagger,
+            ease: 'none',
+            duration: .07
+          }, .76)
 
         /* 読む時間 */
-        .to({}, { duration: .08 });
+        .to({}, { duration: .03 });
 
       /* Phase 6 — 次の誌面へ送り出す */
       addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.0);
@@ -610,7 +645,7 @@
       }, 1.0);
 
       // コンセプトが出そろってから送り出しが始まるまでの真ん中
-      conceptStop = .96 / tl.duration();
+      conceptStop = .985 / tl.duration();
     });
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
@@ -635,9 +670,16 @@
         }, .28)
         .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
         .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .14 }, .62)
-        .fromTo(concept,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, ease: 'none', duration: .18 }, .66)
+        .set(concept, { opacity: 1 }, .64)
+        .fromTo(conceptLines,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            stagger: HERO_SETTINGS.conceptStaggerNarrow,
+            ease: 'none',
+            duration: .06
+          }, .66)
         .to({}, { duration: .10 });
 
       addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile);
@@ -956,7 +998,7 @@
       var article = window.FL_ARTICLE && window.FL_ARTICLE[slug];
       if (!article) throw new Error('not found');
       renderArticle(container, article);
-      initReveal('.p-article__heading, .p-article__p, .p-article__figure, .c-marquee');
+      initReveal('.p-article__head, .p-article__label, .p-article__heading, .p-article__p, .p-article__qa, .p-article__figure, .c-marquee, .p-article__back');
     }).catch(function () {
       fail(container, '記事「' + slug + '」を読み込めませんでした。');
     });
@@ -983,7 +1025,12 @@
     var article = document.getElementById('js-article');
     if (article) initArticlePage(article);
 
-    initReveal('.p-station__inner, [data-reveal]');
+    initReveal([
+      '.p-station__left', '.p-station__right',        // ABOUT
+      '.p-page__head', '.p-page__notice', '.p-page__section', '.p-page__back',
+      '.c-form__row', '.c-form__consent', '.c-form__submit',
+      '[data-reveal]'
+    ].join(', '));
 
     // 静的に置いてある枠のぶん（VOICE 内は描画後に initIndexPage が呼ぶ）
     initParallaxScopes(document);

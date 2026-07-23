@@ -521,6 +521,37 @@ body {
   border-top: 1px solid rgba(255, 255, 255, .18);
 }
 
+/* 開いたときに順に立ち上がる。開閉のたびに繰り返す */
+.c-drawer__section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+
+.c-drawer.is-open .c-drawer__section {
+  opacity: 1;
+  transform: none;
+}
+
+.c-drawer.is-open .c-drawer__section:nth-child(2) {
+  transition-delay: .10s;
+}
+
+.c-drawer__menu li {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+}
+
+.c-drawer.is-open .c-drawer__menu li {
+  opacity: 1;
+  transform: none;
+}
+
+.c-drawer.is-open .c-drawer__menu li:nth-child(1) { transition-delay: .06s; }
+.c-drawer.is-open .c-drawer__menu li:nth-child(2) { transition-delay: .12s; }
+.c-drawer.is-open .c-drawer__menu li:nth-child(3) { transition-delay: .18s; }
+
 .c-drawer__label {
   margin-bottom: 24px;
   font-family: var(--font-ui);
@@ -1086,6 +1117,10 @@ body {
   text-align: center;
 }
 
+.opening-hero__concept-line {
+  display: block;
+}
+
 .opening-hero__concept-title {
   margin: 0;
   font-size: clamp(18px, 2.1vw, 30px);
@@ -1553,7 +1588,9 @@ body {
    ・止め位置は scroll-padding-top（=ヘッダー高）ぶん下げて、
      見出しがヘッダーに隠れないようにする */
 @media (min-width: 901px) {
-  html {
+  /* 止め位置は TOP の構成にしかないので、Hero のあるページだけに効かせる。
+     下層ページに掛けると、止め位置がフッターしかないため最下部へ飛ぶ */
+  html:has([data-opening-hero]) {
     scroll-snap-type: y mandatory;
   }
 
