@@ -40,7 +40,13 @@
       href="assets/img/logo.png"
       fetchpriority="high"
     />
-    <link rel="preload" as="image" href="assets/img/hero-fuji-tea.webp" />
+    <link
+      rel="preload"
+      as="image"
+      href="assets/img/hero-fuji-tea.webp"
+      imagesrcset="assets/img/hero-fuji-tea.webp 1600w, assets/img/hero-fuji-tea-2x.webp 2600w"
+      imagesizes="100vw"
+    />
 
     <!-- スクロール演出用の配置は JS が使える環境にだけ適用する（下記CSS参照） -->
     <script>
@@ -68,8 +74,13 @@
               href="https://www.at-s.com/sbsradio/"
               target="_blank"
               rel="noopener noreferrer"
-              >SBSラジオ</a
-            >
+              ><img
+                src="assets/img/sbs_logo.png"
+                alt="SBSラジオ"
+                width="144"
+                height="96"
+                decoding="async"
+            /></a>
           </p>
         </div>
       </div>
@@ -99,9 +110,14 @@
               <img
                 class="opening-window__image"
                 src="assets/img/hero-fuji-tea.webp"
+                srcset="
+                  assets/img/hero-fuji-tea.webp    1600w,
+                  assets/img/hero-fuji-tea-2x.webp 2600w
+                "
+                sizes="100vw"
                 alt=""
-                width="1000"
-                height="667"
+                width="1600"
+                height="1067"
                 decoding="async"
               />
             </div>

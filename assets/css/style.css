@@ -188,21 +188,23 @@ body {
   gap: 18px;
 }
 
+/* 放送局はロゴで出す。濃色地では読めない素材なので白の版に載せる
+   （ABOUT SBS RADIO と同じ扱い） */
 .l-header__station a {
-  display: inline-block;
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, .3);
-  border-radius: 999px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .12em;
-  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  background-color: var(--color-white);
+  transition: opacity var(--dur) var(--ease);
 }
 
 .l-header__station a:hover {
-  border-color: var(--color-lime);
-  color: var(--color-lime);
+  opacity: .78;
+}
+
+.l-header__station img {
+  width: auto;
+  height: 26px;
 }
 
 @media (max-width: 900px) {

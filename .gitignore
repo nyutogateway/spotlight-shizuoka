@@ -1,8 +1,12 @@
 # macOS
 .DS_Store
 
-# Hero 背景の元素材（Adobe Stock のプレビュー版・825KB）。
-# 実際に使うのは assets/img/hero-fuji-tea.webp だけなので、
-# 元ファイルはリポジトリへ入れず手元に置いておく。
-# ライセンス版を入手したら hero-fuji-tea.webp を差し替える。
+# Hero 背景の元素材（Adobe Stock）。6700x4467・18MB あるので
+# リポジトリへは入れず、書き出し元として手元に置いておく。
+# 配信するのは下の2枚だけ:
+#   assets/img/hero-fuji-tea.webp     1600px / q78
+#   assets/img/hero-fuji-tea-2x.webp  2600px / q70
+# 書き出し方:
+#   cwebp -q 78 -resize 1600 0 -metadata none -sharp_yuv <原本> -o <出力>
+assets/img/AdobeStock_310895879.jpeg
 assets/img/AdobeStock_310895879_Preview.jpeg
