@@ -406,7 +406,8 @@
     logoLift: 24,            // ロゴが退くときに動く量(px)
     exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
     exitLiftMobile: 30,
-    headerLogoAt: 0.40       // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
+    headerLogoAt: 0.40,      // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
+    conceptSnapFrom: 0.60    // ここから先で止めたら、コンセプトが出そろう位置まで送る
   };
 
   /* 切り抜きの形。紙面から切り抜いた穴のつもりで、少しだけ辺を崩す。
@@ -511,6 +512,10 @@
     function stageWidth() { return sticky.clientWidth; }
     function stageHeight() { return sticky.clientHeight; }
 
+    /* 風景とコンセプト文が出そろう位置。各ブランチが実際の値を入れる。
+       ここは見せ場なので、途中の半端な状態で止めない */
+    var conceptStop = 1;
+
     function timeline() {
       return gsap.timeline({
         scrollTrigger: {
@@ -518,7 +523,20 @@
           start: 'top top',
           end: 'bottom bottom',
           scrub: HERO_SETTINGS.scrub,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          snap: {
+            snapTo: function (value) {
+              // 終盤で手を離したときだけ、出そろう位置へ送る。
+              // そこを過ぎたら次のセクションへ抜けるので引き戻さない
+              if (value > HERO_SETTINGS.conceptSnapFrom && value < conceptStop + .02) {
+                return conceptStop;
+              }
+              return value;
+            },
+            duration: { min: .25, max: .7 },
+            delay: .06,
+            ease: 'power2.inOut'
+          }
         }
       });
     }
@@ -590,6 +608,9 @@
         ease: 'none',
         duration: .10
       }, 1.0);
+
+      // コンセプトが出そろってから送り出しが始まるまでの真ん中
+      conceptStop = .96 / tl.duration();
     });
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
@@ -625,6 +646,8 @@
         ease: 'none',
         duration: .10
       }, '<');
+
+      conceptStop = .89 / tlNarrow.duration();
     });
 
     // 画像やフォントが揃ってから測り直す

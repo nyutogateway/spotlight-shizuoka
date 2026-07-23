@@ -1554,12 +1554,27 @@ body {
      見出しがヘッダーに隠れないようにする */
 @media (min-width: 901px) {
   html {
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
+  }
+
+  /* Hero にも止め位置を置くが、Hero の高さ（240svh）は画面より大きいので
+     仕様上その中は自由にスクロールできる。これで mandatory でも
+     Hero の演出が引き戻されない */
+  .opening-hero {
+    scroll-snap-align: start;
   }
 
   .p-voice,
   .p-station {
     scroll-snap-align: start;
+    /* 勢いよく振っても1つずつ止める */
+    scroll-snap-stop: always;
+  }
+
+  /* 末尾にも止め位置を置く。これがないと mandatory が最後の
+     セクションへ引き戻して、フッターの下端まで辿り着けない */
+  .l-footer {
+    scroll-snap-align: end;
   }
 }
 
