@@ -1,0 +1,2479 @@
+@charset "UTF-8";
+/* ==========================================================================
+   栃木未来リーダーズ — style.css
+   FLOCSS: Foundation → Layout → Object(Component / Project / Utility)
+   ※ 分割ビルドに移す場合は各レイヤーのコメント単位で切り出してください。
+   ========================================================================== */
+
+
+/* ==========================================================================
+   #Foundation
+   ========================================================================== */
+
+/* --------------------------------------------------------------
+   Foundation / variable
+   -------------------------------------------------------------- */
+:root {
+  /* color — ロゴの3色（ブルー2種＋ライム）が基準。地は青みを含んだグレー */
+  --color-bg: #E9EDF0;
+  --color-ink: #0E1B2E;
+  --color-sub: #6B7885;
+  --color-line: #D3DAE0;
+  --color-line-strong: #BDC6CE;
+
+  --color-blue: #0090E8;        /* ロゴ濃。主役の差し色 */
+  --color-blue-light: #3DB0EA;  /* ロゴ淡。濃地の上で使う */
+  --color-blue-deep: #0A4E86;   /* イントロの帯 */
+  --color-navy: #0B1B2E;        /* ヘッダー・フッター・ドロワーの地 */
+  --color-lime: #E3E648;        /* ロゴのライム。スポット演出とキッカーだけ */
+
+  --color-black: #0B1B2E;
+  --color-white: #FFFFFF;
+
+  /* group color — 画像読み込み前の下地にだけ使う。JS が inline style で渡す */
+  --group-color: #C4C4C4;
+
+  /* typography — ロゴがセリフなので、本文も明朝で通す。
+     ゴシックは小さなラベルとボタンにだけ使う */
+  --font-serif: "Shippori Mincho B1", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
+  --font-display: "EB Garamond", "Times New Roman", serif;
+  --font-ui: "Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-sans: var(--font-serif);
+
+  /* layout */
+  --header-height: 142px;
+  --container-max: 1440px;
+  --container-pad: 40px;
+  --group-gap: 64px;
+  --card-gap: 44px;
+
+  /* ヘッダーは黒地なので文字・線は白で通す */
+  --header-ink: #FFFFFF;
+
+  /* motion */
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  --dur: .4s;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --container-pad: 20px;
+    --header-height: 96px;
+    --group-gap: 48px;
+    --card-gap: 36px;
+  }
+}
+
+/* --------------------------------------------------------------
+   Foundation / reset
+   -------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--header-height);
+}
+
+body,
+h1, h2, h3, h4, h5, h6,
+p, figure, ul, ol, dl, dd {
+  margin: 0;
+}
+
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------
+   Foundation / base
+   -------------------------------------------------------------- */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 2.05;
+  font-feature-settings: "palt";
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+
+/* ==========================================================================
+   #Layout
+   ========================================================================== */
+
+/* --------------------------------------------------------------
+   Layout / container
+   -------------------------------------------------------------- */
+.l-container {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+/* --------------------------------------------------------------
+   Layout / header
+   -------------------------------------------------------------- */
+/* ロゴが濃色地前提の抜き（黄＋青）なので、ヘッダーはネイビーで通す */
+.l-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: var(--header-height);
+  color: var(--header-ink);
+  background-color: var(--color-navy);
+  transition: height .5s var(--ease), background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+/* ロゴを中央に置くため、左右に同じ 1fr を確保した3分割にする */
+.l-header__inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  height: 100%;
+  padding-inline: var(--container-pad);
+}
+
+.l-header__logo {
+  grid-column: 2;
+  justify-self: center;
+}
+
+/* 右端は放送局とハンバーガー（main.js がここに差し込む） */
+.l-header__end {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.l-header__station a {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.l-header__station a:hover {
+  border-color: var(--color-lime);
+  color: var(--color-lime);
+}
+
+@media (max-width: 900px) {
+  /* 狭い幅ではドロワーに寄せる */
+  .l-header__station {
+    display: none;
+  }
+}
+
+.l-header__logo img {
+  width: auto;
+  height: 106px;
+  transition: height .5s var(--ease);
+}
+
+@media (max-width: 900px) {
+  .l-header__logo img {
+    height: 66px;
+  }
+}
+
+/* --------------------------------------------------------------
+   Layout / footer
+   -------------------------------------------------------------- */
+/* ヘッダーと同じくロゴを読ませるためネイビー地にする */
+.l-footer {
+  margin-top: 72px;
+  padding-block: 56px 36px;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+.l-footer__inner {
+  display: grid;
+  gap: 30px;
+  justify-items: center;
+  text-align: center;
+}
+
+.l-footer__station a {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: var(--color-lime);
+}
+
+.l-footer__logo img {
+  width: auto;
+  height: 88px;
+}
+
+.l-footer__nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 26px;
+}
+
+.l-footer__nav a {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding-block: 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.l-footer__nav a:hover {
+  border-bottom-color: var(--color-blue-light);
+}
+
+.l-footer__copy {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: rgba(255, 255, 255, .5);
+}
+
+
+/* ==========================================================================
+   #Object / Component
+   ========================================================================== */
+
+/* --------------------------------------------------------------
+   Component / skip link
+   -------------------------------------------------------------- */
+.c-skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 18px;
+  background-color: var(--color-lime);
+  color: var(--color-navy);
+  font-size: 12px;
+  font-weight: 700;
+  transition: top var(--dur) var(--ease);
+}
+
+.c-skip-link:focus {
+  top: 12px;
+}
+
+/* --------------------------------------------------------------
+   Component / error（データを読めなかったときだけ出る）
+   -------------------------------------------------------------- */
+.c-error {
+  padding: 40px var(--container-pad);
+  font-size: 13px;
+  color: var(--color-sub);
+}
+
+/* --------------------------------------------------------------
+   Component / marquee（記事の連続した写真。main.js が組み立てる）
+   同じ並びを2周ぶん敷いて -50% 送り、途切れずに流し続ける
+   -------------------------------------------------------------- */
+.c-marquee {
+  margin-top: 44px;
+  overflow: hidden;
+}
+
+.c-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: c-marquee-slide var(--marquee-duration, 30s) linear infinite;
+}
+
+.c-marquee__item {
+  flex: 0 0 auto;
+  /* 幅は main.js が「1画面に何枚見せるか」から計算して渡す */
+  width: var(--marquee-item, 200px);
+  background-color: var(--color-line);
+}
+
+.c-marquee__item img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+@keyframes c-marquee-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* --------------------------------------------------------------
+   Component / form（お問い合わせ。下層ページのトーンに合わせる）
+   -------------------------------------------------------------- */
+.c-form__row {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.c-form__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.c-form__req {
+  padding: 2px 8px;
+  background-color: var(--color-blue);
+  color: var(--color-white);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.c-form__input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 0;
+  background-color: var(--color-white);
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.c-form__input:focus {
+  border-color: var(--color-blue);
+  outline: none;
+}
+
+.c-form__input--area {
+  resize: vertical;
+}
+
+.c-form__consent {
+  margin-top: 34px;
+  font-size: 13px;
+}
+
+.c-form__consent label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.c-form__consent input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-blue);
+}
+
+.c-form__submit {
+  margin-top: 32px;
+}
+
+.c-form__submit button {
+  min-width: 220px;
+  padding: 16px 40px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.c-form__submit button:hover {
+  background-color: var(--color-blue);
+}
+
+/* --------------------------------------------------------------
+   Component / hamburger（main.js がヘッダーに差し込む）
+   -------------------------------------------------------------- */
+.c-hamburger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.c-hamburger__line {
+  display: block;
+  width: 38px;
+  height: 3px;
+  background-color: currentColor;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+/* 3本のうち上下を交差させ、中央を消して × にする */
+.c-hamburger.is-active {
+  color: var(--color-white);
+}
+
+.c-hamburger.is-active .c-hamburger__line--top {
+  transform: translateY(12px) rotate(45deg);
+}
+
+.c-hamburger.is-active .c-hamburger__line--middle {
+  opacity: 0;
+}
+
+.c-hamburger.is-active .c-hamburger__line--bottom {
+  transform: translateY(-12px) rotate(-45deg);
+}
+
+/* --------------------------------------------------------------
+   Component / drawer（ハンバーガーで開くメニュー）
+   -------------------------------------------------------------- */
+.c-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  visibility: hidden;
+  opacity: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--header-height) + 56px) var(--container-pad) 80px;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+}
+
+.c-drawer.is-open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.c-drawer__inner {
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+.c-drawer__section + .c-drawer__section {
+  margin-top: 64px;
+  padding-top: 48px;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+}
+
+.c-drawer__label {
+  margin-bottom: 24px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: var(--color-blue-light);
+}
+
+.c-drawer__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 56px;
+}
+
+.c-drawer__menu a {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 54px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+  transition: color var(--dur) var(--ease);
+}
+
+.c-drawer__menu a:hover {
+  color: var(--color-blue-light);
+}
+
+.c-drawer__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  column-gap: 44px;
+}
+
+.c-drawer__link {
+  display: block;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+.c-drawer__company {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, .55);
+}
+
+.c-drawer__person {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  transition: color var(--dur) var(--ease);
+}
+
+.c-drawer__link:hover .c-drawer__person,
+.c-drawer__link:focus-visible .c-drawer__person {
+  color: var(--color-blue-light);
+}
+
+/* ドロワーを開いている間は背面を固定する */
+.is-drawer-open {
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------
+   Component / typeband（背景に敷く大きな英字）
+   主役にしない。濃紺の細い輪郭だけで、誌面のアクセントとして置く。
+   スクロール量は main.js が --typeband-shift へ渡す
+   -------------------------------------------------------------- */
+.c-typeband {
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.c-typeband__text {
+  width: max-content;
+  margin: 0;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: clamp(80px, 15vw, 220px);
+  font-weight: 500;
+  line-height: .9;
+  letter-spacing: .02em;
+  margin-left: -3vw;   /* 端で見切れるところから始めて、誌面の一部に見せる */
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(11, 27, 46, .10);
+  transform: translateX(var(--typeband-shift, 0px));
+  will-change: transform;
+}
+
+/* セクションの切り替わりに置く帯 */
+.c-typeband--divider {
+  margin-top: 10vh;
+  padding-block: 2vh;
+}
+
+.c-typeband--divider .c-typeband__text {
+  font-size: clamp(60px, 11vw, 160px);
+}
+
+/* --------------------------------------------------------------
+   Component / card（VOICE のカード）
+   写真と企業ロゴを重ねて置き、ホバーで入れ替える。
+   ・通常のカード … 既定はロゴ、ホバーで顔
+   ・各グループの先頭（--lead）… 既定は顔、ホバーでロゴ
+   -------------------------------------------------------------- */
+/* 先頭カードはリストの外に置くため、行頭記号を明示的に消す */
+.c-card {
+  list-style: none;
+}
+
+.c-card__link {
+  display: block;
+}
+
+.c-card__img {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background-color: var(--color-white);
+}
+
+.c-card__photo,
+.c-card__logo {
+  position: absolute;
+  inset: 0;
+  transition: opacity .55s var(--ease);
+}
+
+/* 枠より少し高く取り、枠の中だけで上下させる（--parallax-shift は
+   main.js が親セクションへ配る。JS が動かなければ既定値のまま止まる） */
+.c-card__photo img {
+  width: 100%;
+  height: 112%;
+  object-fit: cover;
+  object-position: top;
+  transform: translateY(var(--parallax-shift, -3%));
+}
+
+/* ロゴ面。素材ごとに地色が焼き込まれているので、
+   小さく・同じ光学サイズに揃えて「印」として見せる */
+.c-card__logo {
+  display: grid;
+  place-items: center;
+  padding: 9% 7%;
+  background-color: var(--color-white);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+
+/* 素材ごとに縦横比も地色もばらつくので、幅・高さの両方を小さく縛って
+   「同じくらいの大きさの印」に見えるところまで落とす */
+.c-card__logo img {
+  max-width: 96%;
+  max-height: 72%;
+  width: auto;
+  object-fit: contain;
+  transition: transform .55s var(--ease);
+}
+
+.c-card__link:hover .c-card__logo img {
+  transform: scale(1.03);
+}
+
+/* 既定：通常カードはロゴ、先頭カードは顔 */
+.c-card__photo { opacity: 0; }
+.c-card__logo { opacity: 1; }
+
+.c-card--lead .c-card__photo { opacity: 1; }
+.c-card--lead .c-card__logo { opacity: 0; }
+
+/* ホバーで入れ替える */
+.c-card__link:hover .c-card__photo,
+.c-card__link:focus-visible .c-card__photo { opacity: 1; }
+
+.c-card__link:hover .c-card__logo,
+.c-card__link:focus-visible .c-card__logo { opacity: 0; }
+
+.c-card--lead .c-card__link:hover .c-card__photo,
+.c-card--lead .c-card__link:focus-visible .c-card__photo { opacity: 0; }
+
+.c-card--lead .c-card__link:hover .c-card__logo,
+.c-card--lead .c-card__link:focus-visible .c-card__logo { opacity: 1; }
+
+.c-card__more {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 6px 12px;
+  background-color: rgba(11, 27, 46, .78);
+  color: var(--color-white);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.c-card__link:hover .c-card__more {
+  background-color: var(--color-navy);
+}
+
+.c-card__info {
+  padding-top: 18px;
+}
+
+.c-card__en {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2.5svh, 26px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: .01em;
+  color: var(--color-ink);
+}
+
+.c-card__jp {
+  margin-top: 6px;
+  font-size: clamp(15px, 2svh, 19px);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: .04em;
+}
+
+.c-card__job {
+  margin-top: 8px;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.9;
+  letter-spacing: .08em;
+  color: var(--color-sub);
+}
+
+/* --------------------------------------------------------------
+   Component / form（お問い合わせ。下層ページのトーンに合わせる）
+   -------------------------------------------------------------- */
+.c-form__row {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.c-form__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.c-form__req {
+  padding: 2px 8px;
+  background-color: var(--color-blue);
+  color: var(--color-white);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.c-form__input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 0;
+  background-color: var(--color-white);
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.c-form__input:focus {
+  border-color: var(--color-blue);
+  outline: none;
+}
+
+.c-form__input--area {
+  resize: vertical;
+}
+
+.c-form__consent {
+  margin-top: 34px;
+  font-size: 13px;
+}
+
+.c-form__consent label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.c-form__consent input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-blue);
+}
+
+.c-form__submit {
+  margin-top: 32px;
+}
+
+.c-form__submit button {
+  min-width: 220px;
+  padding: 16px 40px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.c-form__submit button:hover {
+  background-color: var(--color-blue);
+}
+
+/* --------------------------------------------------------------
+   Component / hamburger（main.js がヘッダーに差し込む）
+   -------------------------------------------------------------- */
+.c-hamburger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.c-hamburger__line {
+  display: block;
+  width: 38px;
+  height: 3px;
+  background-color: currentColor;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+/* 3本のうち上下を交差させ、中央を消して × にする */
+.c-hamburger.is-active {
+  color: var(--color-white);
+}
+
+.c-hamburger.is-active .c-hamburger__line--top {
+  transform: translateY(12px) rotate(45deg);
+}
+
+.c-hamburger.is-active .c-hamburger__line--middle {
+  opacity: 0;
+}
+
+.c-hamburger.is-active .c-hamburger__line--bottom {
+  transform: translateY(-12px) rotate(-45deg);
+}
+
+/* --------------------------------------------------------------
+   Component / drawer（ハンバーガーで開くメニュー）
+   -------------------------------------------------------------- */
+.c-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  visibility: hidden;
+  opacity: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--header-height) + 56px) var(--container-pad) 80px;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+}
+
+.c-drawer.is-open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.c-drawer__inner {
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+.c-drawer__section + .c-drawer__section {
+  margin-top: 64px;
+  padding-top: 48px;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+}
+
+.c-drawer__label {
+  margin-bottom: 24px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: var(--color-blue-light);
+}
+
+.c-drawer__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 56px;
+}
+
+.c-drawer__menu a {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 54px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+  transition: color var(--dur) var(--ease);
+}
+
+.c-drawer__menu a:hover {
+  color: var(--color-blue-light);
+}
+
+.c-drawer__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  column-gap: 44px;
+}
+
+.c-drawer__link {
+  display: block;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+.c-drawer__company {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, .55);
+}
+
+.c-drawer__person {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  transition: color var(--dur) var(--ease);
+}
+
+.c-drawer__link:hover .c-drawer__person,
+.c-drawer__link:focus-visible .c-drawer__person {
+  color: var(--color-blue-light);
+}
+
+/* ドロワーを開いている間は背面を固定する */
+.is-drawer-open {
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------
+   Project / opening hero（TOP）
+   誌面に空けた切り抜きから静岡の風景が覗き、スクロールでその中へ入る。
+
+   ・基準は「演出なしでも読める縦積み」。
+   ・JS が使える環境（html.has-js）だけ sticky の演出用配置へ切り替える。
+   ・GSAP を読めなかった / モーション低減のときは
+     main.js が .is-static を付けて基準の縦積みへ戻す。
+   ・調整値は下の :root にまとめてある。
+   -------------------------------------------------------------- */
+:root {
+  --opening-scroll-length: 240svh;  /* Hero 全体のスクロール距離 */
+  --opening-side: 6vw;              /* Hero の左右余白 */
+  --opening-intro-width: min(34vw, 500px);
+  --opening-window-width: 48vw;
+  --opening-window-height: 54svh;
+  --opening-window-border: 1px;
+  --opening-image-scale: 1.24;      /* 初期の拡大率。CSS と JS で揃える */
+  --opening-image-veil: .12;        /* 写真に常時かけるネイビー。地の色に馴染ませる */
+  --opening-overlay-opacity: .58;   /* 最終盤の覆い。JS の overlayOpacity と揃える */
+}
+
+/* ---- 基準（演出なし）。上から順に読める縦積み ---- */
+.opening-hero {
+  position: relative;
+}
+
+.opening-hero__intro {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding: 9vh var(--container-pad) 6vh;
+}
+
+.opening-hero__eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: var(--color-blue);
+}
+
+.opening-hero__title {
+  margin-top: 26px;
+  font-size: clamp(38px, 4.2vw, 68px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: .02em;
+}
+
+.opening-hero__description {
+  max-width: 520px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-line-strong);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 2.1;
+  color: var(--color-sub);
+}
+
+/* 切り抜き。演出時はここが 100svh まで広がって全画面の風景になる */
+.opening-window {
+  position: relative;
+  overflow: hidden;
+  height: 56svh;
+  margin-inline: var(--container-pad);
+  border: var(--opening-window-border) solid var(--color-line-strong);
+  border-radius: 0;
+  background-color: var(--color-navy);
+}
+
+.opening-window__visual {
+  width: 100%;
+  height: 100%;
+}
+
+/* 端に薄く影を落として、写真の上でも小さな文字を読めるようにする。
+   全体に薄いネイビーを重ね、ページの地の色（濃紺・霞グレー）へ寄せる */
+.opening-window__visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: rgba(11, 27, 46, var(--opening-image-veil));
+  background-image: linear-gradient(180deg,
+    rgba(11, 27, 46, .34) 0%,
+    rgba(11, 27, 46, 0) 24%,
+    rgba(11, 27, 46, 0) 70%,
+    rgba(11, 27, 46, .42) 100%);
+}
+
+.opening-window__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 44%;
+  transform: scale(var(--opening-image-scale));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* 情報の断片・SCROLL・ネイビーの覆いは演出時にだけ出す */
+.opening-window__fragments,
+.opening-hero__scroll,
+.opening-hero__overlay {
+  display: none;
+}
+
+/* コンセプト文。基準ではページ唯一の濃い面として置く */
+.opening-hero__concept {
+  margin-top: 8vh;
+  padding: 12vh var(--container-pad);
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  text-align: center;
+}
+
+.opening-hero__concept-label {
+  font-family: var(--font-display);
+  font-size: clamp(11px, 1.1vw, 14px);
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--color-lime);
+}
+
+.opening-hero__concept-title {
+  margin-top: 34px;
+  font-size: clamp(18px, 2.1vw, 30px);
+  font-weight: 400;
+  line-height: 2.3;
+  letter-spacing: .06em;
+}
+
+.opening-hero__concept-body {
+  margin-top: 30px;
+  font-family: var(--font-display);
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 500;
+  line-height: 2;
+  letter-spacing: .04em;
+  color: rgba(255, 255, 255, .62);
+}
+
+/* ---- 演出用の配置（JS が使える環境だけ）---- */
+/* ヘッダーのぶん引き上げ、最初の1画面から sticky を効かせる。
+   ヘッダー（z-index 60）は Hero の上に重なる */
+.has-js .opening-hero {
+  min-height: var(--opening-scroll-length);
+  margin-top: calc(var(--header-height) * -1);
+}
+
+.has-js .opening-hero__sticky {
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;          /* 古い Safari 向けの控え */
+  height: 100svh;
+  background-color: var(--color-bg);
+}
+
+/* ヘッダーが上を覆うので、その下の残りを基準に中央へ置く */
+.has-js .opening-hero__intro {
+  position: absolute;
+  top: calc(50% + var(--header-height) / 2);
+  left: var(--opening-side);
+  z-index: 4;
+  width: var(--opening-intro-width);
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+  transform: translateY(-50%);
+}
+
+.has-js .opening-window {
+  position: absolute;
+  top: 50%;
+  right: var(--opening-side);
+  z-index: 2;
+  width: var(--opening-window-width);
+  height: var(--opening-window-height);
+  margin-inline: 0;
+  border-color: var(--color-line);
+  transform: translateY(-50%);
+  will-change: width, height, transform;
+}
+
+/* ロゴを写真へ刷り込む（multiply）ので、ここでは重ね合わせの文脈を作らない。
+   z-index は付けず、DOM 順で写真の上に出す */
+.has-js .opening-window__fragments {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.opening-fragment {
+  position: absolute;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: .14em;
+  color: rgba(255, 255, 255, .72);
+}
+
+/* 緩いグリッドに沿わせ、ロゴだけ少し規則を外す */
+.opening-fragment--label { top: 24px; left: 26px; }
+.opening-fragment--count { top: 24px; right: 26px; }
+.opening-fragment--location { right: 26px; bottom: 24px; }
+
+/* multiply は GSAP が動かす要素側に置く。
+   img 側に置くと transform で重ね合わせが切れて白地が残る */
+.opening-fragment--logo {
+  bottom: 22px;
+  left: 26px;
+  width: 88px;
+  height: 40px;
+  mix-blend-mode: multiply;
+}
+
+.opening-fragment--logo-alt {
+  bottom: 34px;
+  left: 138px;
+  width: 76px;
+  height: 34px;
+}
+
+/* ロゴ素材は地色が焼き込まれているので、白地を multiply で飛ばして
+   風景に刷り込まれた小さな印として置く（一覧にはしない） */
+.opening-fragment--logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  filter: grayscale(1) contrast(.9);
+  opacity: .5;
+}
+
+.has-js .opening-hero__scroll {
+  display: flex;
+  position: absolute;
+  left: var(--opening-side);
+  bottom: 4vh;
+  z-index: 4;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--color-sub);
+}
+
+.opening-hero__scroll-line {
+  display: block;
+  width: 42px;
+  height: 1px;
+  background-color: currentColor;
+}
+
+.has-js .opening-hero__overlay {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background-color: var(--color-navy);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.has-js .opening-hero__concept {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 6;
+  width: min(760px, 82vw);
+  margin: 0;
+  padding: 0;
+  background: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+/* ---- 演出を使わないときは基準の縦積みへ戻す ---- */
+.opening-hero.is-static {
+  min-height: auto;
+  margin-top: 0;
+}
+
+.opening-hero.is-static .opening-hero__sticky {
+  position: static;
+  height: auto;
+  overflow: visible;
+  background: none;
+}
+
+.opening-hero.is-static .opening-hero__intro {
+  position: static;
+  width: auto;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding: 9vh var(--container-pad) 6vh;
+  transform: none;
+}
+
+.opening-hero.is-static .opening-window {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: auto;
+  height: 56svh;
+  margin-inline: var(--container-pad);
+  transform: none;
+  will-change: auto;
+}
+
+.opening-hero.is-static .opening-window__fragments,
+.opening-hero.is-static .opening-hero__scroll,
+.opening-hero.is-static .opening-hero__overlay {
+  display: none;
+}
+
+.opening-hero.is-static .opening-hero__concept {
+  position: static;
+  width: auto;
+  margin-top: 8vh;
+  padding: 12vh var(--container-pad);
+  background-color: var(--color-navy);
+  transform: none;
+  opacity: 1;
+}
+
+/* JS が動かない環境でも読めるよう、CSS 単独でも同じ状態にする */
+@media (prefers-reduced-motion: reduce) {
+  .has-js .opening-hero {
+    min-height: auto;
+    margin-top: 0;
+  }
+
+  .has-js .opening-hero__sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+    background: none;
+  }
+
+  .has-js .opening-hero__intro {
+    position: static;
+    width: auto;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding: 9vh var(--container-pad) 6vh;
+    transform: none;
+  }
+
+  .has-js .opening-window {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    height: 56svh;
+    margin-inline: var(--container-pad);
+    transform: none;
+    will-change: auto;
+  }
+
+  .has-js .opening-window__fragments,
+  .has-js .opening-hero__scroll,
+  .has-js .opening-hero__overlay {
+    display: none;
+  }
+
+  .has-js .opening-hero__concept {
+    position: static;
+    width: auto;
+    margin-top: 8vh;
+    padding: 12vh var(--container-pad);
+    background-color: var(--color-navy);
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --opening-scroll-length: 150svh;
+    --opening-side: var(--container-pad);
+  }
+
+  .opening-hero__title {
+    font-size: clamp(32px, 9vw, 46px);
+  }
+
+  .opening-hero__description {
+    margin-top: 22px;
+    padding-top: 18px;
+  }
+
+  .has-js .opening-hero__intro {
+    top: calc(var(--header-height) + 4vh);
+    left: var(--opening-side);
+    width: auto;
+    right: var(--opening-side);
+    transform: none;
+  }
+
+  .has-js .opening-window {
+    top: auto;
+    right: var(--opening-side);
+    left: var(--opening-side);
+    bottom: 8vh;
+    width: auto;
+    height: 36svh;
+    transform: none;
+  }
+
+  /* 断片は3つまで */
+  .opening-fragment--logo-alt,
+  .opening-fragment--count {
+    display: none;
+  }
+
+  .has-js .opening-hero__scroll {
+    bottom: 3vh;
+  }
+
+  .has-js .opening-hero__concept {
+    width: calc(100% - var(--container-pad) * 2);
+  }
+
+  /* 既存コンセプト文は改行位置が決まっているので、
+     1行が画面幅に収まるところまで落とす */
+  .opening-hero__concept-title {
+    font-size: clamp(14px, 4vw, 20px);
+    line-height: 2.1;
+  }
+}
+
+/* --------------------------------------------------------------
+   Project / featured（Hero から外した人物情報。VOICE の前に置く）
+   写真と名前は main.js が data から入れ替える
+   -------------------------------------------------------------- */
+.p-featured {
+  display: none;
+  position: relative;
+  padding-block: 14vh 10vh;
+}
+
+.p-featured.is-ready {
+  display: block;
+}
+
+/* 背景の英字。本文より後ろに置く */
+.p-featured__band {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  transform: translateY(-50%);
+}
+
+.p-featured__band .c-typeband__text {
+  font-size: clamp(64px, 12vw, 170px);
+}
+
+/* 見出しは写真のキャプションと下で揃える */
+.p-featured__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6%;
+  align-items: end;
+}
+
+.p-featured__label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--color-blue);
+}
+
+.p-featured__title {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-line-strong);
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 500;
+  line-height: 1.7;
+  letter-spacing: .04em;
+}
+
+.p-featured__visual {
+  width: min(300px, 34vw);
+}
+
+/* 写真は2枚重ねて、読み込めた側と入れ替える */
+.p-featured__stage {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: var(--color-line);
+}
+
+/* 写真は差し替わるので、動かすのは枠のほう。
+   枠を少し高く取り、その中で上下させる */
+.p-featured__frame {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 112%;
+  opacity: 0;
+  transform: translateY(var(--parallax-shift, -3%));
+  transition: opacity .9s var(--ease);
+}
+
+.p-featured__frame.is-front {
+  opacity: 1;
+}
+
+.p-featured__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.p-featured__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.p-featured__caption-name {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+
+.p-featured__caption-company {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-sub);
+}
+
+@media (max-width: 900px) {
+  .p-featured {
+    padding-block: 10vh 8vh;
+  }
+
+  .p-featured__inner {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .p-featured__visual {
+    width: min(280px, 60vw);
+  }
+}
+
+/* --------------------------------------------------------------
+   Project / voice（5件ずつのグループ）
+   先頭の1枚を大きく立て、残り4枚は横に流すレールに入れる。
+   グループごとに左右を入れ替えて、並びが単調にならないようにする
+   -------------------------------------------------------------- */
+/* 1グループ＝ヘッダーを除いた1画面ぶん */
+.p-voice {
+  display: flex;
+  align-items: stretch;
+  height: calc(100svh - var(--header-height));
+  padding-block: 4vh;
+  border-top: 1px solid var(--color-line-strong);
+  overflow: hidden;
+}
+
+.p-voice__inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.p-voice__head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  margin-bottom: 3vh;
+}
+
+.p-voice__group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--color-ink);
+}
+
+.p-voice__group-label {
+  font-size: 11px;
+  letter-spacing: .2em;
+}
+
+.p-voice__group-num {
+  font-size: clamp(30px, 3.4vw, 50px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.p-voice__title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 38px);
+  font-weight: 400;
+  letter-spacing: .04em;
+}
+
+/* 見出し脇の短い説明。狭い画面では出さない */
+.p-voice__note {
+  display: none;
+}
+
+.p-voice__range {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: .16em;
+  color: var(--color-sub);
+}
+
+.p-voice__text {
+  margin-top: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-line-strong);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 2;
+  color: var(--color-sub);
+}
+
+/* 送りボタンは見出しの右端に小さく */
+.p-voice__nav {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.p-voice__arrow {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+.p-voice__arrow::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+
+.p-voice__arrow--prev::before { transform: translate(-40%, -50%) rotate(-135deg); }
+.p-voice__arrow--next::before { transform: translate(-60%, -50%) rotate(45deg); }
+
+.p-voice__arrow:hover:not(:disabled) {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.p-voice__arrow:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+/* 本体。左に大きい1枚、右にレール。残りの高さを全部使う */
+.p-voice__body {
+  transition: opacity .22s var(--ease);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.p-voice__lead,
+.p-voice__rail {
+  min-height: 0;
+}
+
+/* 写真は全カード同じ比率(3:4)。
+   1画面に収めるため、カード幅は画面の高さから決める（幅×4/3＝写真の高さ） */
+.p-voice__body .c-card__img {
+  aspect-ratio: 3 / 4;
+}
+
+.p-voice__lead .c-card {
+  width: min(34svh, 33vw);
+}
+
+.p-voice__body.is-swapping {
+  opacity: 0;
+}
+
+.p-voice__rail {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 画面の端まで伸ばして「まだ続く」ことを見せる */
+  margin-right: calc(-1 * var(--container-pad));
+  padding-right: var(--container-pad);
+}
+
+.p-voice__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.p-voice__cards {
+  display: flex;
+  align-items: start;
+  gap: 20px;
+  /* カードが並びきる幅までは端まで散らす。溢れるときは横スクロール */
+  width: max-content;
+  min-width: 100%;
+  justify-content: space-between;
+}
+
+.p-voice__cards > .c-card {
+  flex: 0 0 auto;
+  width: min(23svh, 23vw);
+  scroll-snap-align: start;
+}
+
+/* 先頭カードは大きく、名前も一段大きく見せる */
+.p-voice__lead .c-card__en {
+  font-size: clamp(22px, 2.2vw, 34px);
+}
+
+.p-voice__lead .c-card__jp {
+  font-size: 18px;
+}
+
+.p-voice__lead .c-card__info {
+  padding-top: 22px;
+}
+
+/* 偶数グループは左右を入れ替える */
+.p-voice--flip .p-voice__body {
+  grid-template-columns: 1fr auto;
+}
+
+.p-voice--flip .p-voice__lead {
+  order: 2;
+}
+
+.p-voice--flip .p-voice__rail {
+  order: 1;
+  margin-right: 0;
+  margin-left: calc(-1 * var(--container-pad));
+  padding-right: 0;
+  padding-left: var(--container-pad);
+  /* 右端から並べ、左へ流す */
+  direction: rtl;
+}
+
+.p-voice--flip .p-voice__cards {
+  direction: ltr;
+}
+
+/* PC は「左＝見出し / 右＝カード」の2カラム。
+   見出しはこのセクションを読んでいる間だけ sticky で残す。
+   ・sticky は overflow: hidden の中では効かないので、この幅だけ外す
+   ・900px 以下は既存どおり縦積み（sticky も解除）に戻る */
+@media (min-width: 901px) {
+  .p-voice {
+    overflow: visible;
+  }
+
+  .p-voice__inner {
+    display: grid;
+    grid-template-columns: minmax(190px, 19%) 1fr;
+    gap: 0 5%;
+    align-items: start;
+    height: 100%;
+  }
+
+  .p-voice__head {
+    position: sticky;
+    top: calc(var(--header-height) + 48px);
+    align-self: start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 0;
+  }
+
+  .p-voice__note {
+    display: block;
+    margin-top: 6px;
+  }
+
+  .p-voice__nav {
+    margin-top: 10px;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  /* 縦に積むので1画面固定は外す */
+  .p-voice {
+    height: auto;
+    padding-block: 7vh;
+  }
+
+  .p-voice__body,
+  .p-voice--flip .p-voice__body {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .p-voice__lead,
+  .p-voice--flip .p-voice__lead {
+    order: 0;
+    max-width: 320px;
+  }
+
+  .p-voice--flip .p-voice__rail {
+    order: 0;
+    margin-left: calc(-1 * var(--container-pad));
+    margin-right: calc(-1 * var(--container-pad));
+    padding-inline: var(--container-pad);
+    direction: ltr;
+  }
+
+  .p-voice__rail {
+    margin-left: calc(-1 * var(--container-pad));
+  }
+
+  .p-voice__cards > .c-card {
+    width: clamp(150px, 42vw, 220px);
+  }
+}
+
+/* --------------------------------------------------------------
+   Project / station（運営する放送局の紹介。シリーズ共通の枠）
+   -------------------------------------------------------------- */
+.p-station {
+  margin-top: 8vh;
+  padding-block: 8vh;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+.p-station__inner {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 40px 8%;
+  align-items: start;
+}
+
+/* 放送局ロゴ。濃紺地では読めない素材なので、白の版に載せて置く */
+.p-station__logo {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 26px;
+  padding: 12px 18px;
+  background-color: var(--color-white);
+}
+
+.p-station__logo img {
+  width: auto;
+  height: 42px;
+}
+
+.p-station__freq {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--color-lime);
+}
+
+.p-station__title {
+  margin-top: 12px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 36px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.p-station__sub {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, .6);
+}
+
+.p-station__link {
+  margin-top: 22px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.p-station__link a {
+  border-bottom: 2px solid var(--color-lime);
+  padding-bottom: 3px;
+}
+
+.p-station__text {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 2.2;
+  color: rgba(255, 255, 255, .82);
+}
+
+@media (max-width: 760px) {
+  .p-station__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------
+   Project / page（contact.html / privacy.html などの下層ページ）
+   -------------------------------------------------------------- */
+.p-page {
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  gap: 0 6%;
+  padding-block: 72px 10vh;
+}
+
+.p-page__head {
+  position: sticky;
+  top: calc(var(--header-height) + 56px);
+  align-self: start;
+}
+
+.p-page__kicker {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: var(--color-sub);
+}
+
+.p-page__title {
+  margin-top: 14px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(44px, 6.4vw, 96px);
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+
+.p-page__lead {
+  margin-top: 26px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 2.1;
+  color: var(--color-sub);
+}
+
+.p-page__body {
+  max-width: 720px;
+}
+
+/* 仮の内容であることを明示する帯 */
+.p-page__notice {
+  margin-bottom: 48px;
+  padding: 16px 20px;
+  border-left: 3px solid var(--color-blue);
+  background-color: var(--color-white);
+  font-size: 12px;
+  line-height: 2;
+}
+
+.p-page__section + .p-page__section {
+  margin-top: 48px;
+}
+
+.p-page__heading {
+  margin-bottom: 16px;
+  font-size: clamp(16px, 1.5vw, 19px);
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.p-page__p {
+  font-weight: 400;
+  line-height: 2.2;
+}
+
+.p-page__p + .p-page__p {
+  margin-top: 16px;
+}
+
+.p-page__list {
+  display: grid;
+  gap: 10px;
+}
+
+.p-page__list li {
+  position: relative;
+  padding-left: 18px;
+  font-weight: 400;
+  line-height: 2.1;
+}
+
+.p-page__list li::before {
+  content: "";
+  position: absolute;
+  top: .95em;
+  left: 0;
+  width: 8px;
+  height: 2px;
+  background-color: var(--color-blue);
+}
+
+.p-page__dl-row {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.p-page__dl-row dt {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-sub);
+}
+
+.p-page__dl-row dd {
+  margin: 0;
+  font-weight: 400;
+}
+
+.p-page__link,
+.p-page__dl-row dd a {
+  border-bottom: 2px solid var(--color-blue);
+}
+
+.p-page__date {
+  margin-top: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-sub);
+}
+
+.p-page__back {
+  margin-top: 72px;
+  padding-top: 28px;
+  border-top: 1px solid var(--color-line-strong);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.p-page__back a {
+  border-bottom: 2px solid transparent;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.p-page__back a:hover {
+  border-bottom-color: var(--color-blue);
+}
+
+@media (max-width: 900px) {
+  .p-page {
+    grid-template-columns: 1fr;
+  }
+
+  .p-page__head {
+    position: static;
+    margin-bottom: 48px;
+  }
+
+  .p-page__dl-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* --------------------------------------------------------------
+   Project / article（entry.html。main.js が中身を生成する）
+   構成は「人物ヘッダー → MY STORY → 中央見出し → 本文（Q&A可）」
+   -------------------------------------------------------------- */
+.p-article {
+  max-width: 1120px;
+  padding-block: 56px 12vh;
+}
+
+/* 頭は写真＝左 / 人物情報＝右 */
+.p-article__head {
+  display: grid;
+  grid-template-columns: 36% 1fr;
+  align-items: start;
+  gap: 56px;
+  padding-bottom: 64px;
+  border-bottom: 1px solid var(--color-line-strong);
+}
+
+.p-article__portrait {
+  background-color: var(--group-color);
+}
+
+.p-article__portrait img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: top;
+}
+
+.p-article__title {
+  font-size: clamp(22px, 2.9vw, 38px);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -.02em;
+}
+
+/* 欧文の氏名。人物ヘッダーの主役 */
+.p-article__name-en {
+  margin-top: 26px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  color: var(--color-blue);
+}
+
+.p-article__name {
+  margin-top: 8px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.p-article__company {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-sub);
+}
+
+.p-article__profile {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-line);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 2.1;
+}
+
+.p-article__site {
+  margin-top: 16px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.p-article__site a {
+  border-bottom: 2px solid var(--color-blue);
+}
+
+/* 本文 */
+/* 本文は読み幅を絞りつつ、スライダーだけ記事幅いっぱいに出せるようにする */
+.p-article__content {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(0, 1fr)
+    [text-start] min(840px, 100%)
+    [text-end] minmax(0, 1fr)
+    [full-end];
+  margin-top: 72px;
+}
+
+.p-article__content > * {
+  grid-column: text-start / text-end;
+}
+
+/* 写真の帯だけ full 列。上の一括指定より後ろに置いて勝たせる */
+.p-article__content > .c-marquee {
+  grid-column: full-start / full-end;
+}
+
+/* 章の頭に置くラベル */
+.p-article__label {
+  width: fit-content;
+  margin: 96px auto 0;
+  padding: 7px 26px;
+  border: 1px solid var(--color-blue);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  line-height: 1;
+  color: var(--color-blue);
+}
+
+.p-article__label:first-child {
+  margin-top: 0;
+}
+
+.p-article__heading {
+  max-width: 26ch;
+  margin: 26px auto 44px;
+  font-size: clamp(19px, 2.2vw, 28px);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: -.01em;
+  text-align: center;
+}
+
+.p-article__p {
+  margin-top: 22px;
+  font-weight: 400;
+  line-height: 2.25;
+}
+
+/* 質問と回答。データが type:"q" / "a" を持つときだけ出る */
+.p-article__qa {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.p-article__badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 3px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.p-article__qa--q .p-article__badge {
+  background-color: var(--color-blue);
+  color: var(--color-white);
+}
+
+.p-article__qa--a .p-article__badge {
+  background-color: var(--color-line-strong);
+  color: var(--color-ink);
+}
+
+.p-article__qa-text {
+  line-height: 2.1;
+}
+
+.p-article__qa--q .p-article__qa-text {
+  font-weight: 700;
+}
+
+.p-article__qa--a .p-article__qa-text {
+  font-weight: 400;
+}
+
+.p-article__figure {
+  margin-top: 40px;
+}
+
+.p-article__caption {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-sub);
+}
+
+.p-article__back {
+  margin-top: 96px;
+  text-align: center;
+}
+
+.p-article__back a {
+  display: inline-block;
+  padding: 15px 48px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.p-article__back a::before {
+  content: "← ";
+}
+
+.p-article__back a:hover {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+@media (max-width: 900px) {
+  .p-article__head {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-bottom: 44px;
+  }
+
+  .p-article__portrait img {
+    aspect-ratio: 4 / 3;
+  }
+
+  .p-article__content {
+    margin-top: 52px;
+  }
+
+  .p-article__label {
+    margin-top: 68px;
+  }
+}
+
+
+/* ==========================================================================
+   #Object / Utility
+   ========================================================================== */
+.u-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+
+/* ==========================================================================
+   #Responsive
+   ========================================================================== */
+@media (max-width: 900px) {
+  .p-intro {
+    /* 下の余白は斜めの板（下記）に食われるぶんを見込んで確保する */
+    padding-block: 72px 104px;
+  }
+
+  .p-intro::after {
+    bottom: -44px;
+    height: 104px;
+  }
+
+  .p-intro__inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* 3列を保てなくなる幅で、先頭を全幅の横組みに戻して2列にする */
+@media (max-width: 1100px) {
+  .p-group__list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .c-card--lead {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .c-card--lead .c-card__link {
+    grid-template-columns: minmax(200px, 48%) 1fr;
+    align-items: center;
+    gap: 28px;
+  }
+
+}
+
+/* カード2列を保てなくなる幅で1列に落とし、lead も縦組みに戻す */
+@media (max-width: 760px) {
+  .p-group__list {
+    grid-template-columns: 1fr;
+  }
+
+  .c-card--lead .c-card__link {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* 1列で写真を大きく出すと30件が延々と続くので、画像＝左の詰まった並びにする */
+  .c-card__link,
+  .c-card--lead .c-card__link {
+    grid-template-columns: minmax(108px, 36%) 1fr;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .c-card--lead .c-card__title {
+    font-size: 16px;
+  }
+
+}
+
+
+/* ==========================================================================
+   #Motion — JS でのフェードイン（main.js が is-visible を付与）
+   ========================================================================== */
+.js-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .7s var(--ease), transform .7s var(--ease);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 記事カードだけ、もう少し下から静かに上げる */
+.c-card.js-reveal,
+[data-reveal].js-reveal {
+  transform: translateY(32px);
+  transition-duration: .8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+
+  .js-reveal,
+  .c-card.js-reveal,
+  [data-reveal].js-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  /* 写真の帯は止める（transition ではなく animation のため個別に指定） */
+  .c-marquee__track {
+    animation: none;
+  }
+
+  /* スクロール連動はすべて止め、内容だけを見せる */
+  .c-card__photo img,
+  .p-featured__frame {
+    height: 100%;
+    transform: none;
+  }
+
+  .c-typeband__text {
+    transform: none;
+  }
+}
+
+
+/* ==========================================================================
+   #Print
+   ========================================================================== */
+@media print {
+  .l-header,
+  .l-footer__nav {
+    position: static;
+  }
+
+  .c-hamburger,
+  .c-drawer {
+    display: none;
+  }
+}

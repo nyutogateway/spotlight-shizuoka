@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SPOTLIGHT SHIZUOKA</title>
+    <meta
+      name="description"
+      content="静岡には、未来を創るリーダーがいる。地域を支える企業、新しい価値を生む挑戦者、まちをつなぐキーパーソン……その最前線に迫る20のストーリー。"
+    />
+    <link rel="canonical" href="https://example.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SPOTLIGHT SHIZUOKA" />
+    <meta property="og:title" content="SPOTLIGHT SHIZUOKA" />
+    <meta
+      property="og:description"
+      content="静岡には、未来を創るリーダーがいる。その最前線に迫る20のストーリー。"
+    />
+    <meta
+      property="og:image"
+      content="https://example.com/assets/img/ogp.jpg"
+    />
+    <meta property="og:url" content="https://example.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0B1B2E" />
+    <link rel="icon" href="assets/img/favicon.png" type="image/svg+xml" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;family=Shippori+Mincho+B1:wght@400;500;600;700&amp;family=Noto+Sans+JP:wght@400;500&amp;display=swap"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+
+    <!-- Hero の背景。最初の1画面に必ず出るので先に取りに行く -->
+    <link
+      rel="preload"
+      as="image"
+      href="assets/img/hero-fuji-tea.webp"
+      fetchpriority="high"
+    />
+
+    <!-- スクロール演出用の配置は JS が使える環境にだけ適用する（下記CSS参照） -->
+    <script>
+      document.documentElement.classList.add("has-js");
+    </script>
+  </head>
+  <body>
+    <a class="c-skip-link" href="#main">本文へスキップ</a>
+
+    <header class="l-header" id="js-header">
+      <div class="l-header__inner">
+        <p class="l-header__logo">
+          <a href="index.html"
+            ><img
+              src="assets/img/logo.png"
+              alt="SPOTLIGHT SHIZUOKA"
+              width="1034"
+              height="569"
+          /></a>
+        </p>
+
+        <div class="l-header__end">
+          <p class="l-header__station">
+            <a
+              href="https://www.at-s.com/sbsradio/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >SBSラジオ</a
+            >
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main class="l-main" id="main">
+      <!-- TOP。静岡の風景の一部から、スクロールで風景の中へ入る。
+           演出は assets/js/main.js の initOpeningHero() が組み立てる -->
+      <section class="opening-hero" data-opening-hero>
+        <div class="opening-hero__sticky">
+          <div class="opening-hero__intro">
+            <p class="opening-hero__eyebrow">INTERVIEW &amp; LOCAL STORIES</p>
+            <h1 class="opening-hero__title">未来を創る<br />リーダー</h1>
+            <p class="opening-hero__description">
+              静岡で挑戦を続ける人と企業の声を、<br />
+              インタビューを通して届けるメディア。
+            </p>
+          </div>
+
+          <!-- 誌面に空けた切り抜き。最後は全画面の風景になる -->
+          <div class="opening-window">
+            <div class="opening-window__visual">
+              <img
+                class="opening-window__image"
+                src="assets/img/hero-fuji-tea.webp"
+                alt=""
+                width="1000"
+                height="667"
+                decoding="async"
+              />
+            </div>
+
+            <!-- 情報の断片。ロゴ2枠は main.js が data から入れる -->
+            <div class="opening-window__fragments" aria-hidden="true">
+              <p class="opening-fragment opening-fragment--label">INTERVIEW</p>
+              <p class="opening-fragment opening-fragment--count">
+                20 INTERVIEWS
+              </p>
+              <div
+                class="opening-fragment opening-fragment--logo"
+                data-opening-logo
+              ></div>
+              <div
+                class="opening-fragment opening-fragment--logo opening-fragment--logo-alt"
+                data-opening-logo
+              ></div>
+              <p class="opening-fragment opening-fragment--location">
+                SHIZUOKA / 35.0°N
+              </p>
+            </div>
+          </div>
+
+          <p class="opening-hero__scroll" aria-hidden="true">
+            <span>SCROLL</span><span class="opening-hero__scroll-line"></span>
+          </p>
+
+          <div class="opening-hero__overlay" aria-hidden="true"></div>
+
+          <div class="opening-hero__concept">
+            <p class="opening-hero__concept-label">SPOTLIGHT SHIZUOKA とは…</p>
+            <h2 class="opening-hero__concept-title">
+              静岡には、<br />
+              未来を創造するリーダーがいる。<br />
+              地域に変革をもたらすプロフェッショナルたち、<br />
+              静岡から広がる無限の可能性。<br />
+              その最前線に迫る20のストーリー。
+            </h2>
+            <p class="opening-hero__concept-body">
+              In Shizuoka, leaders are forging the future. From companies that
+              support the region and challengers creating new value to key
+              community figures.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hero から外した人物情報。写真と名前は main.js が data から入れ替える -->
+      <section class="p-featured" id="js-featured" data-parallax-scope>
+        <div class="c-typeband p-featured__band" data-typeband aria-hidden="true">
+          <p class="c-typeband__text">INTERVIEW</p>
+        </div>
+
+        <div class="p-featured__inner l-container">
+          <div class="p-featured__head">
+            <p class="p-featured__label">FEATURED INTERVIEW</p>
+            <h2 class="p-featured__title">掲載中のリーダー</h2>
+          </div>
+
+          <div class="p-featured__visual" id="js-top-stage">
+            <a class="p-featured__stage" href="#"
+              ><span class="p-featured__frame"></span
+              ><span class="p-featured__frame"></span
+            ></a>
+            <p class="p-featured__caption"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VOICE。5件ずつのグループは main.js が data から生成する -->
+      <div class="p-voices" id="js-voices">
+        <h2 class="u-visually-hidden">VOICE ｜ 20人のリーダー</h2>
+        <noscript>
+          <p class="c-error">記事一覧の表示には JavaScript が必要です。</p>
+        </noscript>
+      </div>
+
+      <!-- VOICE から ABOUT への切り替わり。背景の誌面的なアクセント -->
+      <div class="c-typeband c-typeband--divider" data-typeband aria-hidden="true">
+        <p class="c-typeband__text">SPOTLIGHT SHIZUOKA</p>
+      </div>
+
+      <!-- ABOUT。シリーズ共通で、協力する放送局を紹介する枠 -->
+      <section class="p-station" id="about-station">
+        <div class="p-station__inner l-container">
+          <div class="p-station__left">
+            <p class="p-station__logo">
+              <img
+                src="assets/img/sbs_logo.png"
+                alt="SBS RADIO"
+                width="144"
+                height="96"
+                loading="lazy"
+                decoding="async"
+              />
+            </p>
+            <p class="p-station__freq">AM 1404kHz</p>
+            <h2 class="p-station__title">ABOUT SBS RADIO</h2>
+            <p class="p-station__sub">SBSラジオについて</p>
+          </div>
+          <div class="p-station__right">
+            <p class="p-station__text">
+              SBSラジオは、静岡放送株式会社が運営する静岡県の放送局。AM 1404kHz
+              に加え、ワイドFM（静岡 93.9MHz／浜松・富士富士宮 94.7MHz／三島
+              90.1MHz／御殿場 92.1MHz／下田 90.1MHz）と radiko
+              で県内全域にお届けしています。
+            </p>
+            <p class="p-station__link">
+              <a
+                href="https://www.at-s.com/sbsradio/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >SBSラジオ公式サイト</a
+              >
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="l-footer">
+      <div class="l-container l-footer__inner">
+        <p class="l-footer__station">
+          <a
+            href="https://www.at-s.com/sbsradio/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >SBSラジオ</a
+          >
+        </p>
+        <p class="l-footer__logo">
+          <img
+            src="assets/img/logo.png"
+            alt="SPOTLIGHT SHIZUOKA"
+            width="1034"
+            height="569"
+          />
+        </p>
+        <nav class="l-footer__nav" aria-label="フッター">
+          <ul>
+            <li><a href="contact.html">CONTACT</a></li>
+            <li><a href="privacy.html">PRIVACY</a></li>
+          </ul>
+        </nav>
+        <p class="l-footer__copy">
+          Copyright &copy; 2026 SPOTLIGHT SHIZUOKA. All Rights Reserved.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Hero のスクロール演出用。読み込めなくても Hero は静的に表示される -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"
+      defer
+    ></script>
+
+    <script src="data/entries.js" defer></script>
+    <script src="assets/js/main.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CONTACT ｜ SPOTLIGHT SHIZUOKA</title>
+<meta name="description" content="SPOTLIGHT SHIZUOKA へのお問い合わせ窓口です。">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SPOTLIGHT SHIZUOKA">
+<meta name="theme-color" content="#0B1B2E">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;family=Shippori+Mincho+B1:wght@400;500;600;700&amp;family=Noto+Sans+JP:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="c-skip-link" href="#main">本文へスキップ</a>
+
+<header class="l-header" id="js-header">
+  <div class="l-header__inner">
+    <p class="l-header__logo">
+      <a href="index.html"><img src="assets/img/logo.png" alt="SPOTLIGHT SHIZUOKA" width="1034" height="569"></a>
+    </p>
+
+    <div class="l-header__end">
+      <p class="l-header__station">
+        <a href="https://www.at-s.com/sbsradio/" target="_blank" rel="noopener noreferrer">SBSラジオ</a>
+      </p>
+    </div>
+  </div>
+</header>
+
+<main class="l-main" id="main">
+  <div class="p-page l-container">
+    <header class="p-page__head">
+      <p class="p-page__kicker">SPOTLIGHT SHIZUOKA</p>
+      <h1 class="p-page__title">Contact</h1>
+      <p class="p-page__lead">各種お問合せにつきましては、下記フォームにてご連絡ください。ご記入いただいた内容に基づき、担当者より折り返しご連絡させていただきます。なお、お問合せの内容によっては、ご回答までにお時間をいただく場合がございます。</p>
+    </header>
+
+    <div class="p-page__body">
+      <!-- ★送信先が未設定。決まり次第 action / method を入れる -->
+      <form class="c-form" novalidate>
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-name">お名前<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-kana">ふりがな<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-kana" name="kana" type="text" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-company">会社名<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-company" name="company" type="text" autocomplete="organization" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-email">メールアドレス<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-email" name="email" type="email" autocomplete="email" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-email2">メールアドレス（確認）<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-email2" name="email_confirm" type="email" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-tel">電話番号<span class="c-form__req">必須</span></label>
+          <input class="c-form__input" id="f-tel" name="tel" type="tel" autocomplete="tel" required>
+        </div>
+
+        <div class="c-form__row">
+          <label class="c-form__label" for="f-body">お問い合わせ内容<span class="c-form__req">必須</span></label>
+          <textarea class="c-form__input c-form__input--area" id="f-body" name="body" rows="8" required></textarea>
+        </div>
+
+        <p class="c-form__consent">
+          <label>
+            <input type="checkbox" name="agree" required>
+            <a class="p-page__link" href="privacy.html">プライバシーポリシー</a>に同意する
+          </label>
+        </p>
+
+        <p class="c-form__submit">
+          <button type="submit">送信する</button>
+        </p>
+      </form>
+
+      <p class="p-page__back"><a href="index.html">← TOP へ戻る</a></p>
+    </div>
+  </div>
+</main>
+
+<footer class="l-footer">
+  <div class="l-container l-footer__inner">
+    <p class="l-footer__logo"><img src="assets/img/logo.png" alt="SPOTLIGHT SHIZUOKA" width="1034" height="569"></p>
+    <nav class="l-footer__nav" aria-label="フッター">
+      <ul>
+        <li><a href="contact.html">CONTACT</a></li>
+        <li><a href="privacy.html">PRIVACY</a></li>
+      </ul>
+    </nav>
+    <p class="l-footer__copy">&copy; 2026 SPOTLIGHT SHIZUOKA</p>
+  </div>
+</footer>
+
+<script src="data/entries.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>
