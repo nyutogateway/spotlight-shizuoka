@@ -1006,8 +1006,8 @@ body {
 :root {
   --opening-scroll-length: 240svh;  /* Hero 全体のスクロール距離 */
   --opening-side: 7vw;              /* Hero の左右余白 */
-  --opening-logo-width: min(46vw, 620px);
-  --opening-window-width: 30vw;
+  --opening-logo-width: min(52vw, 700px, 84svh);   /* 平たい画面では高さでも抑える */
+  --opening-window-width: min(30vw, 52svh);
   --opening-window-ratio: 1.31;      /* 静岡県の実際の縦横比。画面比で歪ませない */
   --opening-window-bleed-x: 4vw;    /* 右の余白 */
   --opening-window-bleed-y: 4svh;   /* 下の余白 */
@@ -1083,30 +1083,12 @@ body {
   text-align: center;
 }
 
-.opening-hero__concept-label {
-  font-family: var(--font-display);
-  font-size: clamp(11px, 1.1vw, 14px);
-  font-weight: 700;
-  letter-spacing: .14em;
-  color: var(--color-lime);
-}
-
 .opening-hero__concept-title {
-  margin-top: 34px;
+  margin: 0;
   font-size: clamp(18px, 2.1vw, 30px);
   font-weight: 400;
   line-height: 2.3;
   letter-spacing: .06em;
-}
-
-.opening-hero__concept-body {
-  margin-top: 30px;
-  font-family: var(--font-display);
-  font-size: clamp(11px, 1vw, 13px);
-  font-weight: 500;
-  line-height: 2;
-  letter-spacing: .04em;
-  color: rgba(255, 255, 255, .62);
 }
 
 /* ---- 演出用の配置（JS が使える環境だけ）---- */
@@ -1145,9 +1127,11 @@ body {
 /* ロゴは Hero の主役。ヘッダー内の小さなロゴとは役割を分ける */
 /* left:50% の絶対配置だと収縮幅が親の半分に制限されるので、
    枠側に幅を持たせて画像はそれに合わせる */
+/* ヘッダーは Hero の頭では地を持たないので、
+   ヘッダー下ではなく画面そのものの中心に置く */
 .has-js .opening-hero__logo {
   position: absolute;
-  top: calc(50% + var(--header-height) / 2);
+  top: 44%;
   left: 50%;
   z-index: 4;
   width: var(--opening-logo-width);
@@ -1318,15 +1302,15 @@ body {
   :root {
     --opening-scroll-length: 150svh;
     --opening-side: var(--container-pad);
-    --opening-logo-width: min(84vw, 400px);
-    --opening-window-width: 52vw;
+    --opening-logo-width: min(88vw, 440px, 50svh);
+    --opening-window-width: min(52vw, 30svh);
     --opening-window-bleed-x: 5vw;
     --opening-window-bleed-y: 4svh;
   }
 
   /* 狭い画面では中央のまま少し上へ寄せ、下の切り抜きと重ならないようにする */
   .has-js .opening-hero__logo {
-    top: calc(var(--header-height) + 21vh);
+    top: calc(var(--header-height) + 15vh);
     left: 50%;
     transform: translateX(-50%);
   }
@@ -1344,131 +1328,6 @@ body {
   .opening-hero__concept-title {
     font-size: clamp(14px, 4vw, 20px);
     line-height: 2.1;
-  }
-}
-
-/* --------------------------------------------------------------
-   Project / featured（Hero から外した人物情報。VOICE の前に置く）
-   写真と名前は main.js が data から入れ替える
-   -------------------------------------------------------------- */
-.p-featured {
-  display: none;
-  position: relative;
-  padding-block: 14vh 10vh;
-}
-
-.p-featured.is-ready {
-  display: block;
-}
-
-/* 背景の英字。本文より後ろに置く */
-.p-featured__band {
-  position: absolute;
-  top: 42%;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  transform: translateY(-50%);
-}
-
-.p-featured__band .c-typeband__text {
-  font-size: clamp(64px, 12vw, 170px);
-}
-
-/* 見出しは写真のキャプションと下で揃える */
-.p-featured__inner {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 6%;
-  align-items: end;
-}
-
-.p-featured__label {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .22em;
-  color: var(--color-blue);
-}
-
-.p-featured__title {
-  margin-top: 22px;
-  padding-top: 22px;
-  border-top: 1px solid var(--color-line-strong);
-  font-size: clamp(20px, 2.2vw, 30px);
-  font-weight: 500;
-  line-height: 1.7;
-  letter-spacing: .04em;
-}
-
-.p-featured__visual {
-  width: min(300px, 34vw);
-}
-
-/* 写真は2枚重ねて、読み込めた側と入れ替える */
-.p-featured__stage {
-  position: relative;
-  display: block;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  background-color: var(--color-line);
-}
-
-/* 写真は差し替わるので、動かすのは枠のほう。
-   枠を少し高く取り、その中で上下させる */
-.p-featured__frame {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 112%;
-  opacity: 0;
-  transform: translateY(var(--parallax-shift, -3%));
-  transition: opacity .9s var(--ease);
-}
-
-.p-featured__frame.is-front {
-  opacity: 1;
-}
-
-.p-featured__frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
-}
-
-.p-featured__caption {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 16px;
-}
-
-.p-featured__caption-name {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: .04em;
-}
-
-.p-featured__caption-company {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--color-sub);
-}
-
-@media (max-width: 900px) {
-  .p-featured {
-    padding-block: 10vh 8vh;
-  }
-
-  .p-featured__inner {
-    grid-template-columns: 1fr;
-    gap: 34px;
-  }
-
-  .p-featured__visual {
-    width: min(280px, 60vw);
   }
 }
 
@@ -2380,8 +2239,7 @@ body {
   }
 
   /* スクロール連動はすべて止め、内容だけを見せる */
-  .c-card__photo img,
-  .p-featured__frame {
+  .c-card__photo img {
     height: 100%;
     transform: none;
   }

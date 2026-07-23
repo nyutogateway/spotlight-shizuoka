@@ -386,101 +386,6 @@
   }
 
   /* ------------------------------------------------------------------
-     2-2. FEATURED INTERVIEW。掲載者の顔を自動で入れ替える
-     （Hero から外した人物情報。VOICE の手前に置く）
-     ------------------------------------------------------------------ */
-  function initFeatured() {
-    var stage = document.getElementById('js-top-stage');
-    if (!stage || !window.FL_ENTRIES || !window.FL_ENTRIES.groups) return;
-
-    var members = [];
-    window.FL_ENTRIES.groups.forEach(function (group) {
-      group.entries.forEach(function (entry) {
-        if (entry.image) members.push(entry);
-      });
-    });
-    // 出す中身がないときは枠ごと出さない
-    if (!members.length) return;
-
-    var section = document.getElementById('js-featured');
-    if (section) section.classList.add('is-ready');
-
-    var link = stage.querySelector('.p-featured__stage');
-    var frames = stage.querySelectorAll('.p-featured__frame');
-    var caption = stage.querySelector('.p-featured__caption');
-    var index = 0;
-    var front = 0;
-
-    function paint(first) {
-      var entry = members[index];
-      var back = frames[1 - front];
-      var img = el('img');
-      img.src = entry.image;
-      img.alt = entry.image_alt || '';
-      img.decoding = 'async';
-      if (first) img.fetchPriority = 'high';
-      clear(back);
-      back.appendChild(img);
-
-      // 読み込めてから入れ替える。
-      // 読み込みが遅れて順番が前後しても、表になるのは常に1枚だけにする
-      function show() {
-        Array.prototype.forEach.call(frames, function (frame) {
-          frame.classList.toggle('is-front', frame === back);
-        });
-        front = 1 - front;
-      }
-      if (img.complete) show();
-      else img.addEventListener('load', show, { once: true });
-
-      link.href = 'entry.html?slug=' + encodeURIComponent(entry.slug);
-      // 中身が写真だけなので、リンクの行き先は読み上げ用に言葉で持たせる
-      link.setAttribute('aria-label', entry.person + '（' + entry.company + '）のインタビューを読む');
-      clear(caption);
-      caption.appendChild(el('span', 'p-featured__caption-name', entry.person));
-      caption.appendChild(el('span', 'p-featured__caption-company',
-        entry.position ? entry.company + '／' + entry.position : entry.company));
-    }
-
-    paint(true);
-
-    var timer = null;
-    var hovering = false;
-
-    function play() {
-      if (prefersReducedMotion || timer) return;
-      timer = window.setInterval(function () {
-        if (hovering) return;
-        index = (index + 1) % members.length;
-        paint(false);
-      }, 4200);
-    }
-
-    function pause() {
-      if (!timer) return;
-      window.clearInterval(timer);
-      timer = null;
-    }
-
-    ['mouseenter', 'focusin'].forEach(function (type) {
-      stage.addEventListener(type, function () { hovering = true; });
-    });
-    ['mouseleave', 'focusout'].forEach(function (type) {
-      stage.addEventListener(type, function () { hovering = false; });
-    });
-
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) play(); else pause();
-        });
-      }, { threshold: 0.2 }).observe(stage);
-    } else {
-      play();
-    }
-  }
-
-  /* ------------------------------------------------------------------
      2-3. TOP の Hero
      切り抜きから覗く静岡の風景が、スクロールで全画面の風景になり、
      最後にコンセプト文が出る。GSAP + ScrollTrigger を使う。
@@ -1038,7 +943,6 @@
   function init() {
     initHeader();
     initMenu();
-    initFeatured();
 
     var hero = document.querySelector('[data-opening-hero]');
     if (hero) {
@@ -1057,7 +961,7 @@
     var article = document.getElementById('js-article');
     if (article) initArticlePage(article);
 
-    initReveal('.p-featured__inner, .p-station__inner, [data-reveal]');
+    initReveal('.p-station__inner, [data-reveal]');
 
     // 静的に置いてある枠のぶん（VOICE 内は描画後に initIndexPage が呼ぶ）
     initParallaxScopes(document);
