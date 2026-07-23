@@ -162,6 +162,15 @@ body {
 .l-header__logo {
   grid-column: 2;
   justify-self: center;
+  transition: opacity .55s var(--ease), visibility .55s var(--ease);
+}
+
+/* TOP の頭では Hero の大きなロゴが主役なので、ヘッダー側は出さない。
+   main.js が Hero を離れはじめたところで外す。
+   visibility も落として、見えない状態でフォーカスが入らないようにする */
+.l-header.is-logo-hidden .l-header__logo {
+  opacity: 0;
+  visibility: hidden;
 }
 
 /* 右端は放送局とハンバーガー（main.js がここに差し込む） */
@@ -979,7 +988,8 @@ body {
 
 /* --------------------------------------------------------------
    Project / opening hero（TOP）
-   誌面に空けた切り抜きから静岡の風景が覗き、スクロールでその中へ入る。
+   深いネイビーの中に大きなロゴ。右下の切り抜きから静岡の風景が覗き、
+   スクロールでその奥へ入っていく。
 
    ・基準は「演出なしでも読める縦積み」。
    ・JS が使える環境（html.has-js）だけ sticky の演出用配置へ切り替える。
@@ -989,64 +999,43 @@ body {
    -------------------------------------------------------------- */
 :root {
   --opening-scroll-length: 240svh;  /* Hero 全体のスクロール距離 */
-  --opening-side: 6vw;              /* Hero の左右余白 */
-  --opening-intro-width: min(34vw, 500px);
-  --opening-window-width: 48vw;
-  --opening-window-height: 54svh;
-  --opening-window-border: 1px;
+  --opening-side: 7vw;              /* Hero の左右余白 */
+  --opening-logo-width: min(44vw, 560px);
+  --opening-window-width: 46vw;
+  --opening-window-height: 52svh;
+  --opening-window-bleed-x: -5vw;   /* 右へ見切れさせる量 */
+  --opening-window-bleed-y: -7svh;  /* 下へ見切れさせる量 */
   --opening-image-scale: 1.24;      /* 初期の拡大率。CSS と JS で揃える */
-  --opening-image-veil: .12;        /* 写真に常時かけるネイビー。地の色に馴染ませる */
-  --opening-overlay-opacity: .58;   /* 最終盤の覆い。JS の overlayOpacity と揃える */
+  --opening-image-veil: .06;        /* 写真に常時かけるネイビー。切り抜きの中は明るく保つ */
+  --opening-overlay-opacity: .64;   /* 最終盤の覆い。JS の overlayOpacity と揃える */
 }
 
 /* ---- 基準（演出なし）。上から順に読める縦積み ---- */
 .opening-hero {
   position: relative;
+  background-color: var(--color-navy);
+  color: var(--color-white);
 }
 
-.opening-hero__intro {
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding: 9vh var(--container-pad) 6vh;
+.opening-hero__logo {
+  margin: 0;
+  padding: 12vh var(--container-pad) 8vh;
 }
 
-.opening-hero__eyebrow {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .18em;
-  color: var(--color-blue);
+.opening-hero__logo img {
+  width: var(--opening-logo-width);
+  height: auto;
 }
 
-.opening-hero__title {
-  margin-top: 26px;
-  font-size: clamp(38px, 4.2vw, 68px);
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: .02em;
-}
-
-.opening-hero__description {
-  max-width: 520px;
-  margin-top: 30px;
-  padding-top: 24px;
-  border-top: 1px solid var(--color-line-strong);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 2.1;
-  color: var(--color-sub);
-}
-
-/* 切り抜き。演出時はここが 100svh まで広がって全画面の風景になる */
+/* 切り抜き。演出時はここが 100svh まで広がって全画面の風景になる。
+   本物の窓枠ではなく、紙面を切り抜いた穴として扱うので枠線は持たせない */
 .opening-window {
   position: relative;
   overflow: hidden;
   height: 56svh;
   margin-inline: var(--container-pad);
-  border: var(--opening-window-border) solid var(--color-line-strong);
-  border-radius: 0;
   background-color: var(--color-navy);
+  clip-path: polygon(0% 9%, 34% 4%, 72% 0%, 100% 2%, 100% 100%, 46% 100%, 0% 100%, 3% 54%);
 }
 
 .opening-window__visual {
@@ -1054,19 +1043,13 @@ body {
   height: 100%;
 }
 
-/* 端に薄く影を落として、写真の上でも小さな文字を読めるようにする。
-   全体に薄いネイビーを重ね、ページの地の色（濃紺・霞グレー）へ寄せる */
+/* 切り抜きの中は光と空気を残したいので、ごく薄くしか沈めない */
 .opening-window__visual::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-color: rgba(11, 27, 46, var(--opening-image-veil));
-  background-image: linear-gradient(180deg,
-    rgba(11, 27, 46, .34) 0%,
-    rgba(11, 27, 46, 0) 24%,
-    rgba(11, 27, 46, 0) 70%,
-    rgba(11, 27, 46, .42) 100%);
 }
 
 .opening-window__image {
@@ -1080,19 +1063,15 @@ body {
   will-change: transform;
 }
 
-/* 情報の断片・SCROLL・ネイビーの覆いは演出時にだけ出す */
-.opening-window__fragments,
+/* SCROLL とネイビーの覆いは演出時にだけ出す */
 .opening-hero__scroll,
 .opening-hero__overlay {
   display: none;
 }
 
-/* コンセプト文。基準ではページ唯一の濃い面として置く */
+/* コンセプト文。基準では Hero のネイビーの上にそのまま置く */
 .opening-hero__concept {
-  margin-top: 8vh;
-  padding: 12vh var(--container-pad);
-  background-color: var(--color-navy);
-  color: var(--color-white);
+  padding: 10vh var(--container-pad) 14vh;
   text-align: center;
 }
 
@@ -1124,7 +1103,7 @@ body {
 
 /* ---- 演出用の配置（JS が使える環境だけ）---- */
 /* ヘッダーのぶん引き上げ、最初の1画面から sticky を効かせる。
-   ヘッダー（z-index 60）は Hero の上に重なる */
+   ヘッダーも同じネイビーなので、上端は一枚の面としてつながる */
 .has-js .opening-hero {
   min-height: var(--opening-scroll-length);
   margin-top: calc(var(--header-height) * -1);
@@ -1137,92 +1116,53 @@ body {
   width: 100%;
   height: 100vh;          /* 古い Safari 向けの控え */
   height: 100svh;
-  background-color: var(--color-bg);
+  background-color: var(--color-navy);
 }
 
-/* ヘッダーが上を覆うので、その下の残りを基準に中央へ置く */
-.has-js .opening-hero__intro {
+/* ネイビーの中へ差し込む光。ロゴの周りだけ空気を持たせる */
+.has-js .opening-hero__sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: radial-gradient(58% 46% at 26% 42%,
+    rgba(61, 176, 234, .13),
+    rgba(61, 176, 234, .05) 46%,
+    transparent 72%);
+}
+
+/* ロゴは Hero の主役。ヘッダー内の小さなロゴとは役割を分ける */
+.has-js .opening-hero__logo {
   position: absolute;
   top: calc(50% + var(--header-height) / 2);
   left: var(--opening-side);
   z-index: 4;
-  width: var(--opening-intro-width);
-  max-width: none;
-  margin-inline: 0;
   padding: 0;
   transform: translateY(-50%);
 }
 
+.has-js .opening-hero__logo img {
+  width: var(--opening-logo-width);
+}
+
+/* 右下から見切れさせ、画面の外にも風景が続いている感じを残す */
 .has-js .opening-window {
   position: absolute;
-  top: 50%;
-  right: var(--opening-side);
+  right: var(--opening-window-bleed-x);
+  bottom: var(--opening-window-bleed-y);
   z-index: 2;
   width: var(--opening-window-width);
   height: var(--opening-window-height);
   margin-inline: 0;
-  border-color: var(--color-line);
-  transform: translateY(-50%);
-  will-change: width, height, transform;
-}
-
-/* ロゴを写真へ刷り込む（multiply）ので、ここでは重ね合わせの文脈を作らない。
-   z-index は付けず、DOM 順で写真の上に出す */
-.has-js .opening-window__fragments {
-  display: block;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.opening-fragment {
-  position: absolute;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.6;
-  letter-spacing: .14em;
-  color: rgba(255, 255, 255, .72);
-}
-
-/* 緩いグリッドに沿わせ、ロゴだけ少し規則を外す */
-.opening-fragment--label { top: 24px; left: 26px; }
-.opening-fragment--count { top: 24px; right: 26px; }
-.opening-fragment--location { right: 26px; bottom: 24px; }
-
-/* multiply は GSAP が動かす要素側に置く。
-   img 側に置くと transform で重ね合わせが切れて白地が残る */
-.opening-fragment--logo {
-  bottom: 22px;
-  left: 26px;
-  width: 88px;
-  height: 40px;
-  mix-blend-mode: multiply;
-}
-
-.opening-fragment--logo-alt {
-  bottom: 34px;
-  left: 138px;
-  width: 76px;
-  height: 34px;
-}
-
-/* ロゴ素材は地色が焼き込まれているので、白地を multiply で飛ばして
-   風景に刷り込まれた小さな印として置く（一覧にはしない） */
-.opening-fragment--logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: left bottom;
-  filter: grayscale(1) contrast(.9);
-  opacity: .5;
+  will-change: width, height, clip-path;
 }
 
 .has-js .opening-hero__scroll {
   display: flex;
   position: absolute;
   left: var(--opening-side);
-  bottom: 4vh;
+  bottom: 5vh;
   z-index: 4;
   align-items: center;
   gap: 12px;
@@ -1230,7 +1170,7 @@ body {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .22em;
-  color: var(--color-sub);
+  color: rgba(255, 255, 255, .58);
 }
 
 .opening-hero__scroll-line {
@@ -1258,7 +1198,6 @@ body {
   width: min(760px, 82vw);
   margin: 0;
   padding: 0;
-  background: none;
   transform: translate(-50%, -50%);
   opacity: 0;
 }
@@ -1276,27 +1215,26 @@ body {
   background: none;
 }
 
-.opening-hero.is-static .opening-hero__intro {
+.opening-hero.is-static .opening-hero__sticky::before {
+  display: none;
+}
+
+.opening-hero.is-static .opening-hero__logo {
   position: static;
-  width: auto;
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding: 9vh var(--container-pad) 6vh;
+  padding: 12vh var(--container-pad) 8vh;
   transform: none;
 }
 
 .opening-hero.is-static .opening-window {
   position: relative;
-  top: auto;
   right: auto;
+  bottom: auto;
   width: auto;
   height: 56svh;
   margin-inline: var(--container-pad);
-  transform: none;
   will-change: auto;
 }
 
-.opening-hero.is-static .opening-window__fragments,
 .opening-hero.is-static .opening-hero__scroll,
 .opening-hero.is-static .opening-hero__overlay {
   display: none;
@@ -1305,9 +1243,7 @@ body {
 .opening-hero.is-static .opening-hero__concept {
   position: static;
   width: auto;
-  margin-top: 8vh;
-  padding: 12vh var(--container-pad);
-  background-color: var(--color-navy);
+  padding: 10vh var(--container-pad) 14vh;
   transform: none;
   opacity: 1;
 }
@@ -1326,27 +1262,26 @@ body {
     background: none;
   }
 
-  .has-js .opening-hero__intro {
+  .has-js .opening-hero__sticky::before {
+    display: none;
+  }
+
+  .has-js .opening-hero__logo {
     position: static;
-    width: auto;
-    max-width: var(--container-max);
-    margin-inline: auto;
-    padding: 9vh var(--container-pad) 6vh;
+    padding: 12vh var(--container-pad) 8vh;
     transform: none;
   }
 
   .has-js .opening-window {
     position: relative;
-    top: auto;
     right: auto;
+    bottom: auto;
     width: auto;
     height: 56svh;
     margin-inline: var(--container-pad);
-    transform: none;
     will-change: auto;
   }
 
-  .has-js .opening-window__fragments,
   .has-js .opening-hero__scroll,
   .has-js .opening-hero__overlay {
     display: none;
@@ -1355,9 +1290,7 @@ body {
   .has-js .opening-hero__concept {
     position: static;
     width: auto;
-    margin-top: 8vh;
-    padding: 12vh var(--container-pad);
-    background-color: var(--color-navy);
+    padding: 10vh var(--container-pad) 14vh;
     transform: none;
     opacity: 1;
   }
@@ -1367,39 +1300,18 @@ body {
   :root {
     --opening-scroll-length: 150svh;
     --opening-side: var(--container-pad);
+    --opening-logo-width: min(72vw, 340px);
+    --opening-window-width: 76vw;
+    --opening-window-height: 34svh;
+    --opening-window-bleed-x: -7vw;
+    --opening-window-bleed-y: -5svh;
   }
 
-  .opening-hero__title {
-    font-size: clamp(32px, 9vw, 46px);
-  }
-
-  .opening-hero__description {
-    margin-top: 22px;
-    padding-top: 18px;
-  }
-
-  .has-js .opening-hero__intro {
-    top: calc(var(--header-height) + 4vh);
+  /* 狭い画面ではロゴを上寄りに置き、下の切り抜きと重ならないようにする */
+  .has-js .opening-hero__logo {
+    top: calc(var(--header-height) + 9vh);
     left: var(--opening-side);
-    width: auto;
-    right: var(--opening-side);
     transform: none;
-  }
-
-  .has-js .opening-window {
-    top: auto;
-    right: var(--opening-side);
-    left: var(--opening-side);
-    bottom: 8vh;
-    width: auto;
-    height: 36svh;
-    transform: none;
-  }
-
-  /* 断片は3つまで */
-  .opening-fragment--logo-alt,
-  .opening-fragment--count {
-    display: none;
   }
 
   .has-js .opening-hero__scroll {

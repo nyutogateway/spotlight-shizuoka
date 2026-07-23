@@ -492,16 +492,70 @@
   var HERO_SETTINGS = {
     scrub: 0.9,
     imageScaleStart: 1.24,   // CSS の --opening-image-scale と揃える
-    imageScaleMid: 1.10,
+    imageScaleMid: 1.12,
     imageScaleEnd: 1,
-    windowMidWidth: 0.52,    // 画面幅に対する中盤の切り抜き幅
-    windowMidHeight: 0.64,   // 画面高に対する中盤の切り抜き高
-    fragmentStagger: 0.04,
-    overlayOpacity: 0.58,    // CSS の --opening-overlay-opacity と揃える
+    windowMidWidth: 0.54,    // 画面幅に対する中盤の切り抜き幅
+    windowMidHeight: 0.66,   // 画面高に対する中盤の切り抜き高
+    windowMidBleed: 0.4,     // 見切れ量を中盤でどこまで戻すか（0=そのまま 1=画面内）
+    overlayOpacity: 0.64,    // CSS の --opening-overlay-opacity と揃える
     parallax: 10,            // Phase1 で風景がずれる量(px)
+    logoLift: 24,            // ロゴが退くときに動く量(px)
     exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
-    exitLiftMobile: 30
+    exitLiftMobile: 30,
+    headerLogoAt: 0.40       // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
   };
+
+  /* 切り抜きの形。紙面から切り抜いた穴のつもりで、少しだけ辺を崩す。
+     最後は同じ点数のまま矩形へ寄せて、全画面の風景につなぐ。
+     CSS の .opening-window の clip-path と開始値を揃えること */
+  var HERO_CLIP_CUT = 'polygon(0% 9%, 34% 4%, 72% 0%, 100% 2%, 100% 100%, 46% 100%, 0% 100%, 3% 54%)';
+  var HERO_CLIP_FULL = 'polygon(0% 0%, 34% 0%, 72% 0%, 100% 0%, 100% 100%, 46% 100%, 0% 100%, 0% 50%)';
+
+  /* CSS 変数で指定した見切れ量(vw / svh)を px にして、
+     中盤でどこまで画面内へ戻すかを返す */
+  function bleed(base, name) {
+    var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    var value = parseFloat(raw) || 0;          // 例: "-5vw" → -5
+    var px = base * value / 100;
+    return px * (1 - HERO_SETTINGS.windowMidBleed);
+  }
+
+  /* 本文の地色。Hero の締めで下から覗かせる色に使う */
+  function pageBackground() {
+    var value = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-bg').trim();
+    return value || '#E9EDF0';
+  }
+
+  /* ヘッダーのロゴの受け渡し。
+     Hero の頭では大きなロゴだけを見せたいので、ヘッダー側は隠しておき、
+     Hero を離れはじめたところで出す。二重に見せない。
+     GSAP が無いときはこの関数自体を呼ばないので、ヘッダーは通常表示のまま */
+  function initHeaderLogoHandoff(hero) {
+    var header = document.getElementById('js-header');
+    if (!header) return;
+
+    var threshold = 1;
+
+    // 測るのはリサイズのときだけ。スクロール中はクラスを切り替えるだけにする
+    function measure() {
+      var travel = hero.offsetHeight - window.innerHeight;
+      threshold = Math.max(travel * HERO_SETTINGS.headerLogoAt, 1);
+    }
+
+    function update() {
+      header.classList.toggle('is-logo-hidden', window.scrollY < threshold);
+    }
+
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', function () {
+      measure();
+      update();
+    }, { passive: true });
+
+    measure();
+    update();
+  }
 
   /* Hero の締め。風景とコンセプト文をまとめて少し持ち上げ、
      下から本文の地色（＝次のセクションと同じ色）を覗かせて送り出す。
@@ -515,41 +569,11 @@
     }, position);
   }
 
-  /* 情報の断片のロゴ。各グループの先頭から2つだけ借りる（一覧にはしない） */
-  function fillHeroLogos(hero) {
-    var slots = hero.querySelectorAll('[data-opening-logo]');
-    if (!slots.length) return;
-
-    var logos = [];
-    if (window.FL_ENTRIES && window.FL_ENTRIES.groups) {
-      window.FL_ENTRIES.groups.forEach(function (group) {
-        var lead = group.entries && group.entries[0];
-        if (lead && lead.logo) logos.push(lead.logo);
-      });
-    }
-
-    Array.prototype.forEach.call(slots, function (slot, i) {
-      if (!logos[i]) {
-        slot.hidden = true;
-        return;
-      }
-      var img = el('img');
-      img.src = logos[i];
-      img.alt = '';
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      // 読めなかったロゴは枠ごと消す
-      img.addEventListener('error', function () { slot.hidden = true; });
-      slot.appendChild(img);
-    });
-  }
-
   function initOpeningHero(hero) {
     var sticky = hero.querySelector('.opening-hero__sticky');
-    var intro = hero.querySelector('.opening-hero__intro');
+    var logo = hero.querySelector('.opening-hero__logo');
     var frame = hero.querySelector('.opening-window');
     var image = hero.querySelector('.opening-window__image');
-    var fragments = hero.querySelectorAll('.opening-fragment');
     var scroll = hero.querySelector('.opening-hero__scroll');
     var overlay = hero.querySelector('.opening-hero__overlay');
     var concept = hero.querySelector('.opening-hero__concept');
@@ -559,7 +583,7 @@
       hero.classList.add('is-static');
     }
 
-    if (!sticky || !intro || !frame || !image || !overlay || !concept) {
+    if (!sticky || !logo || !frame || !image || !overlay || !concept) {
       stay('必要な要素が足りません');
       return;
     }
@@ -579,15 +603,9 @@
     // iOS でアドレスバーが伸縮するたびに測り直さない
     ScrollTrigger.config({ ignoreMobileResize: true });
 
-    fillHeroLogos(hero);
-
     // 画面サイズは毎回測り直す（invalidateOnRefresh とセット）
     function stageWidth() { return sticky.clientWidth; }
     function stageHeight() { return sticky.clientHeight; }
-    function headerHeight() {
-      var header = document.getElementById('js-header');
-      return header ? header.offsetHeight : 0;
-    }
 
     function timeline() {
       return gsap.timeline({
@@ -601,58 +619,54 @@
       });
     }
 
+    initHeaderLogoHandoff(hero);
+
     var media = gsap.matchMedia();
 
-    /* PC。左に言葉、右に切り抜き。切り抜きが全画面まで広がる */
+    /* PC。中央から左に大きなロゴ、右下に切り抜き。
+       切り抜きが全画面まで広がり、そのまま風景の中に入る */
     media.add('(min-width: 901px)', function () {
-      // ヘッダーのぶん下げた位置を中心にする
-      function base() {
-        gsap.set(frame, { yPercent: -50, y: headerHeight() / 2 });
-      }
-      base();
-      gsap.set(intro, { yPercent: -50 });
+      gsap.set(logo, { yPercent: -50 });
       gsap.set(concept, { xPercent: -50, yPercent: -50 });
-      ScrollTrigger.addEventListener('refreshInit', base);
 
       var tl = timeline();
 
       tl
-        /* Phase 1 — まだ動かさない。風景と断片がわずかにずれるだけ */
+        /* Phase 1 — まだ動かさない。切り抜きの中の風景がわずかにずれるだけ */
         .to(image, { y: -HERO_SETTINGS.parallax, ease: 'none', duration: .18 }, 0)
-        .to(fragments, { y: -5, ease: 'none', duration: .18 }, 0)
 
-        /* Phase 2 — 視点が風景へ近づく */
+        /* Phase 2 — 視点が切り抜きの奥へ近づく。
+           見切れていた分が少しだけ画面内へ戻り、穴が広がりはじめる */
         .to(image, { scale: HERO_SETTINGS.imageScaleMid, ease: 'none', duration: .22 }, .18)
         .to(frame, {
           width: function () { return stageWidth() * HERO_SETTINGS.windowMidWidth; },
           height: function () { return stageHeight() * HERO_SETTINGS.windowMidHeight; },
+          right: function () { return bleed(stageWidth(), '--opening-window-bleed-x'); },
+          bottom: function () { return bleed(stageHeight(), '--opening-window-bleed-y'); },
           ease: 'none',
           duration: .22
         }, .18)
 
-        /* Phase 3 — 言葉が引き、主役が風景へ移る
-           切り抜きがコピーの位置まで届く前に、コピーは退き始める */
-        .to(intro, { opacity: 0, y: -26, ease: 'none', duration: .16 }, .32)
-        .to(scroll, { opacity: 0, ease: 'none', duration: .10 }, .34)
-        .to(fragments, {
+        /* Phase 3 — ロゴが静かに退き、主役が風景へ移る */
+        .to(logo, {
           opacity: 0,
-          y: -14,
-          stagger: HERO_SETTINGS.fragmentStagger,
+          y: -HERO_SETTINGS.logoLift,
           ease: 'none',
-          duration: .12
-        }, .34)
+          duration: .16
+        }, .24)
+        .to(scroll, { opacity: 0, ease: 'none', duration: .10 }, .34)
 
-        /* Phase 4 — 枠が消え、同じ写真がそのまま全画面になる */
+        /* Phase 4 — 切り抜きの境界がほどけ、同じ写真がそのまま全画面になる */
         .to(frame, {
           width: stageWidth,
           height: stageHeight,
           right: 0,
-          y: 0,
-          borderWidth: 0,
+          bottom: 0,
+          clipPath: HERO_CLIP_FULL,
           ease: 'none',
-          duration: .26
-        }, .52)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .26 }, .52)
+          duration: .28
+        }, .50)
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50)
 
         /* Phase 5 — 風景の上でコンセプト文を読ませる */
         .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .13 }, .72)
@@ -665,13 +679,15 @@
 
       /* Phase 6 — 次の誌面へ送り出す */
       addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.0);
-
-      return function () {
-        ScrollTrigger.removeEventListener('refreshInit', base);
-      };
+      // 持ち上げたときに覗くのは、次のセクションと同じ本文の地色
+      tl.to(sticky, {
+        backgroundColor: pageBackground(),
+        ease: 'none',
+        duration: .10
+      }, 1.0);
     });
 
-    /* 画面が狭いときは短く。言葉の下の切り抜きが全画面まで伸びるだけにする */
+    /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
     media.add('(max-width: 900px)', function () {
       gsap.set(concept, { xPercent: -50, yPercent: -50 });
 
@@ -679,19 +695,18 @@
 
       tlNarrow
         .to(image, { scale: HERO_SETTINGS.imageScaleMid, ease: 'none', duration: .30 }, 0)
-        .to(intro, { opacity: 0, y: -18, ease: 'none', duration: .18 }, .18)
-        .to(fragments, { opacity: 0, y: -10, stagger: .05, ease: 'none', duration: .14 }, .20)
+        .to(logo, { opacity: 0, y: -16, ease: 'none', duration: .18 }, .16)
         .to(scroll, { opacity: 0, ease: 'none', duration: .10 }, .20)
         .to(frame, {
-          left: 0,
+          width: stageWidth,
+          height: stageHeight,
           right: 0,
           bottom: 0,
-          height: stageHeight,
-          borderWidth: 0,
+          clipPath: HERO_CLIP_FULL,
           ease: 'none',
-          duration: .30
-        }, .30)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .30 }, .30)
+          duration: .32
+        }, .28)
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
         .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .14 }, .62)
         .fromTo(concept,
           { opacity: 0, y: 30 },
@@ -699,6 +714,11 @@
         .to({}, { duration: .10 });
 
       addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile);
+      tlNarrow.to(sticky, {
+        backgroundColor: pageBackground(),
+        ease: 'none',
+        duration: .10
+      }, '<');
     });
 
     // 画像やフォントが揃ってから測り直す

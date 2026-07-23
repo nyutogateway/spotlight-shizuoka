@@ -33,13 +33,14 @@
     />
     <link rel="stylesheet" href="assets/css/style.css" />
 
-    <!-- Hero の背景。最初の1画面に必ず出るので先に取りに行く -->
+    <!-- Hero の主役。最初の1画面に必ず出るので先に取りに行く -->
     <link
       rel="preload"
       as="image"
-      href="assets/img/hero-fuji-tea.webp"
+      href="assets/img/logo.png"
       fetchpriority="high"
     />
+    <link rel="preload" as="image" href="assets/img/hero-fuji-tea.webp" />
 
     <!-- スクロール演出用の配置は JS が使える環境にだけ適用する（下記CSS参照） -->
     <script>
@@ -75,20 +76,24 @@
     </header>
 
     <main class="l-main" id="main">
-      <!-- TOP。静岡の風景の一部から、スクロールで風景の中へ入る。
+      <!-- TOP。ネイビーの中に大きなロゴ。右下の切り抜きから静岡の風景が覗き、
+           スクロールでその奥へ入っていく。
            演出は assets/js/main.js の initOpeningHero() が組み立てる -->
       <section class="opening-hero" data-opening-hero>
         <div class="opening-hero__sticky">
-          <div class="opening-hero__intro">
-            <p class="opening-hero__eyebrow">INTERVIEW &amp; LOCAL STORIES</p>
-            <h1 class="opening-hero__title">未来を創る<br />リーダー</h1>
-            <p class="opening-hero__description">
-              静岡で挑戦を続ける人と企業の声を、<br />
-              インタビューを通して届けるメディア。
-            </p>
-          </div>
+          <!-- Hero の主役。ヘッダー内のロゴは初期状態では出さない -->
+          <h1 class="opening-hero__logo">
+            <img
+              src="assets/img/logo.png"
+              alt="SPOTLIGHT SHIZUOKA"
+              width="1034"
+              height="569"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </h1>
 
-          <!-- 誌面に空けた切り抜き。最後は全画面の風景になる -->
+          <!-- 紙面を切り抜いた穴。最後は全画面の風景になる -->
           <div class="opening-window">
             <div class="opening-window__visual">
               <img
@@ -99,25 +104,6 @@
                 height="667"
                 decoding="async"
               />
-            </div>
-
-            <!-- 情報の断片。ロゴ2枠は main.js が data から入れる -->
-            <div class="opening-window__fragments" aria-hidden="true">
-              <p class="opening-fragment opening-fragment--label">INTERVIEW</p>
-              <p class="opening-fragment opening-fragment--count">
-                20 INTERVIEWS
-              </p>
-              <div
-                class="opening-fragment opening-fragment--logo"
-                data-opening-logo
-              ></div>
-              <div
-                class="opening-fragment opening-fragment--logo opening-fragment--logo-alt"
-                data-opening-logo
-              ></div>
-              <p class="opening-fragment opening-fragment--location">
-                SHIZUOKA / 35.0°N
-              </p>
             </div>
           </div>
 
