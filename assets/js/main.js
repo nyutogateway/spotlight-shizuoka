@@ -311,7 +311,6 @@
         }
         clear(rail);
         rail.appendChild(list);
-        rail.scrollLeft = 0;
       }
 
       function rotate(direction) {

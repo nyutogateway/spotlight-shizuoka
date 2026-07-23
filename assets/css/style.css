@@ -713,6 +713,7 @@ body {
   position: absolute;
   right: 12px;
   bottom: 12px;
+  white-space: nowrap;
   z-index: 1;
   padding: 6px 12px;
   background-color: rgba(11, 27, 46, .78);
@@ -1486,35 +1487,33 @@ body {
   opacity: 0;
 }
 
+/* 横スクロールはさせない。残り4人は幅を分け合って必ず収める
+   （5人目までは見出し脇の送りボタンと自動送りで入れ替わる） */
 .p-voice__rail {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  /* 画面の端まで伸ばして「まだ続く」ことを見せる */
-  margin-right: calc(-1 * var(--container-pad));
-  padding-right: var(--container-pad);
-}
-
-.p-voice__rail::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .p-voice__cards {
   display: flex;
   align-items: start;
   gap: 20px;
-  /* カードが並びきる幅までは端まで散らす。溢れるときは横スクロール */
-  width: max-content;
-  min-width: 100%;
-  justify-content: space-between;
+  width: 100%;
 }
 
 .p-voice__cards > .c-card {
-  flex: 0 0 auto;
-  width: min(23svh, 23vw);
-  scroll-snap-align: start;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: min(23svh, 23vw);
+}
+
+/* レールのカードは幅が狭いので、印も小さくする */
+.p-voice__cards .c-card__more {
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 8px;
+  font-size: 8px;
+  letter-spacing: .08em;
 }
 
 /* 先頭カードは大きく、名前も一段大きく見せる */
@@ -1541,16 +1540,34 @@ body {
 
 .p-voice--flip .p-voice__rail {
   order: 1;
-  margin-right: 0;
-  margin-left: calc(-1 * var(--container-pad));
-  padding-right: 0;
-  padding-left: var(--container-pad);
-  /* 右端から並べ、左へ流す */
-  direction: rtl;
 }
 
+/* 大きいカードが右のときは、レールを右端から詰める */
 .p-voice--flip .p-voice__cards {
-  direction: ltr;
+  justify-content: flex-end;
+}
+
+/* セクション単位で止める（スクロールスナップ）。
+   ・Hero には止め位置を置かない。演出の途中で引き戻されてしまうため
+   ・mandatory ではなく proximity。近くで止めたときだけ吸い付く
+   ・止め位置は scroll-padding-top（=ヘッダー高）ぶん下げて、
+     見出しがヘッダーに隠れないようにする */
+@media (min-width: 901px) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+
+  .p-voice,
+  .p-station {
+    scroll-snap-align: start;
+  }
+}
+
+/* モーション低減時は吸い付かせない */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-snap-type: none;
+  }
 }
 
 /* PC は「左＝見出し / 右＝カード」の2カラム。
@@ -1612,18 +1629,21 @@ body {
 
   .p-voice--flip .p-voice__rail {
     order: 0;
-    margin-left: calc(-1 * var(--container-pad));
-    margin-right: calc(-1 * var(--container-pad));
-    padding-inline: var(--container-pad);
-    direction: ltr;
   }
 
-  .p-voice__rail {
-    margin-left: calc(-1 * var(--container-pad));
+  /* 狭い画面は横1列だと小さくなりすぎるので2列で折り返す */
+  .p-voice__cards {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .p-voice--flip .p-voice__cards {
+    justify-content: flex-start;
   }
 
   .p-voice__cards > .c-card {
-    width: clamp(150px, 42vw, 220px);
+    flex: 0 0 calc((100% - 16px) / 2);
+    max-width: none;
   }
 }
 
