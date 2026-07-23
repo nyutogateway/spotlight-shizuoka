@@ -1000,11 +1000,11 @@ body {
 :root {
   --opening-scroll-length: 240svh;  /* Hero 全体のスクロール距離 */
   --opening-side: 7vw;              /* Hero の左右余白 */
-  --opening-logo-width: min(44vw, 560px);
-  --opening-window-width: 46vw;
-  --opening-window-height: 52svh;
-  --opening-window-bleed-x: -5vw;   /* 右へ見切れさせる量 */
-  --opening-window-bleed-y: -7svh;  /* 下へ見切れさせる量 */
+  --opening-logo-width: min(40vw, 520px);
+  --opening-window-width: 30vw;
+  --opening-window-ratio: 1.3;      /* 静岡県の実際の縦横比。画面比で歪ませない */
+  --opening-window-bleed-x: 5vw;    /* 右の余白 */
+  --opening-window-bleed-y: 6svh;   /* 下の余白 */
   --opening-image-scale: 1.24;      /* 初期の拡大率。CSS と JS で揃える */
   --opening-image-veil: .06;        /* 写真に常時かけるネイビー。切り抜きの中は明るく保つ */
   --opening-overlay-opacity: .64;   /* 最終盤の覆い。JS の overlayOpacity と揃える */
@@ -1032,10 +1032,12 @@ body {
 .opening-window {
   position: relative;
   overflow: hidden;
-  height: 56svh;
+  width: auto;
+  max-width: 560px;
+  aspect-ratio: var(--opening-window-ratio);
   margin-inline: var(--container-pad);
   background-color: var(--color-navy);
-  clip-path: polygon(0% 9%, 34% 4%, 72% 0%, 100% 2%, 100% 100%, 46% 100%, 0% 100%, 3% 54%);
+  clip-path: polygon(39.57% 8.48%, 39.54% 26.08%, 20.67% 41.25%, 19.01% 51.35%, 14.02% 58.05%, 9.37% 71.66%, 0.17% 79.35%, 0.00% 92.46%, 18.91% 95.23%, 34.81% 93.99%, 44.64% 100.00%, 42.89% 92.83%, 49.08% 83.20%, 52.49% 69.47%, 61.95% 62.96%, 63.06% 60.14%, 61.31% 59.93%, 61.24% 62.73%, 60.70% 58.34%, 64.45% 51.72%, 72.18% 47.57%, 80.76% 51.19%, 85.48% 56.83%, 84.48% 59.74%, 77.87% 59.73%, 78.47% 70.15%, 76.19% 78.61%, 77.63% 85.04%, 75.44% 90.92%, 81.71% 99.38%, 87.97% 92.47%, 90.34% 93.97%, 90.96% 85.91%, 93.98% 83.52%, 100.00% 67.47%, 96.86% 63.71%, 97.09% 57.00%, 95.24% 55.98%, 97.81% 47.92%, 92.84% 47.04%, 89.67% 38.94%, 92.23% 29.97%, 91.21% 23.40%, 71.91% 27.32%, 65.99% 18.93%, 63.07% 22.28%, 61.81% 31.47%, 63.04% 42.19%, 60.56% 45.34%, 57.48% 44.44%, 54.97% 42.31%, 52.57% 31.17%, 48.18% 32.37%, 45.97% 29.81%, 47.12% 12.27%, 44.15% 0.00%);
 }
 
 .opening-window__visual {
@@ -1126,34 +1128,38 @@ body {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background-image: radial-gradient(58% 46% at 26% 42%,
+  background-image: radial-gradient(56% 46% at 50% 42%,
     rgba(61, 176, 234, .13),
     rgba(61, 176, 234, .05) 46%,
     transparent 72%);
 }
 
 /* ロゴは Hero の主役。ヘッダー内の小さなロゴとは役割を分ける */
+/* left:50% の絶対配置だと収縮幅が親の半分に制限されるので、
+   枠側に幅を持たせて画像はそれに合わせる */
 .has-js .opening-hero__logo {
   position: absolute;
-  top: calc(50% + var(--header-height) / 2);
-  left: var(--opening-side);
+  top: calc(47% + var(--header-height) / 2);
+  left: 50%;
   z-index: 4;
+  width: var(--opening-logo-width);
   padding: 0;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .has-js .opening-hero__logo img {
-  width: var(--opening-logo-width);
+  width: 100%;
 }
 
-/* 右下から見切れさせ、画面の外にも風景が続いている感じを残す */
+/* 右下に少し余白を残して置く。形は静岡県の輪郭 */
 .has-js .opening-window {
   position: absolute;
   right: var(--opening-window-bleed-x);
   bottom: var(--opening-window-bleed-y);
   z-index: 2;
   width: var(--opening-window-width);
-  height: var(--opening-window-height);
+  max-width: none;
+  aspect-ratio: var(--opening-window-ratio);
   margin-inline: 0;
   will-change: width, height, clip-path;
 }
@@ -1230,7 +1236,9 @@ body {
   right: auto;
   bottom: auto;
   width: auto;
-  height: 56svh;
+  max-width: 560px;
+  height: auto;
+  aspect-ratio: var(--opening-window-ratio);
   margin-inline: var(--container-pad);
   will-change: auto;
 }
@@ -1277,7 +1285,9 @@ body {
     right: auto;
     bottom: auto;
     width: auto;
-    height: 56svh;
+    max-width: 560px;
+    height: auto;
+    aspect-ratio: var(--opening-window-ratio);
     margin-inline: var(--container-pad);
     will-change: auto;
   }
@@ -1300,18 +1310,17 @@ body {
   :root {
     --opening-scroll-length: 150svh;
     --opening-side: var(--container-pad);
-    --opening-logo-width: min(72vw, 340px);
-    --opening-window-width: 76vw;
-    --opening-window-height: 34svh;
-    --opening-window-bleed-x: -7vw;
-    --opening-window-bleed-y: -5svh;
+    --opening-logo-width: min(78vw, 360px);
+    --opening-window-width: 52vw;
+    --opening-window-bleed-x: 5vw;
+    --opening-window-bleed-y: 4svh;
   }
 
-  /* 狭い画面ではロゴを上寄りに置き、下の切り抜きと重ならないようにする */
+  /* 狭い画面では中央のまま少し上へ寄せ、下の切り抜きと重ならないようにする */
   .has-js .opening-hero__logo {
-    top: calc(var(--header-height) + 9vh);
-    left: var(--opening-side);
-    transform: none;
+    top: calc(var(--header-height) + 21vh);
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .has-js .opening-hero__scroll {
