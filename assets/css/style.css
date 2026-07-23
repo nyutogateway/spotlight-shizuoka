@@ -173,6 +173,12 @@ body {
   visibility: hidden;
 }
 
+/* 同じネイビーでも Hero 側には光を差しているので、帯を敷くと境目が出る。
+   Hero の頭にいる間は地を Hero へ預けて、一枚の面として見せる */
+.l-header.is-logo-hidden {
+  background-color: transparent;
+}
+
 /* 右端は放送局とハンバーガー（main.js がここに差し込む） */
 .l-header__end {
   grid-column: 3;
@@ -1128,6 +1134,8 @@ body {
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  /* ロゴと一緒に引かせる。ヘッダーが地を取り戻すまでに平らなネイビーへ戻す */
+  opacity: var(--opening-light, 1);
   background-image: radial-gradient(56% 46% at 50% 42%,
     rgba(61, 176, 234, .13),
     rgba(61, 176, 234, .05) 46%,

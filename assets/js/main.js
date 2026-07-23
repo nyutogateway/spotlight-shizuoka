@@ -654,6 +654,7 @@
           ease: 'none',
           duration: .16
         }, .24)
+        .to(sticky, { '--opening-light': 0, ease: 'none', duration: .16 }, .24)
         .to(scroll, { opacity: 0, ease: 'none', duration: .10 }, .34)
 
         /* Phase 4 — 切り抜きの境界がほどけ、同じ写真がそのまま全画面になる */
@@ -696,6 +697,7 @@
       tlNarrow
         .to(image, { scale: HERO_SETTINGS.imageScaleMid, ease: 'none', duration: .30 }, 0)
         .to(logo, { opacity: 0, y: -16, ease: 'none', duration: .18 }, .16)
+        .to(sticky, { '--opening-light': 0, ease: 'none', duration: .18 }, .16)
         .to(scroll, { opacity: 0, ease: 'none', duration: .10 }, .20)
         .to(frame, {
           width: stageWidth,
