@@ -1029,7 +1029,8 @@
     if (article) initArticlePage(article);
 
     initReveal([
-      '.p-station__left', '.p-station__right',        // ABOUT
+      '.p-station__kicker', '.p-station__logo', '.p-station__title',   // ABOUT
+      '.p-station__sub', '.p-station__freq', '.p-station__text', '.p-station__link',
       '.p-page__head', '.p-page__notice', '.p-page__section', '.p-page__back',
       '.c-form__row', '.c-form__consent', '.c-form__submit',
       '[data-reveal]'

@@ -1701,81 +1701,171 @@ body {
 
 /* --------------------------------------------------------------
    Project / station（運営する放送局の紹介。シリーズ共通の枠）
+   静岡の風景を暗く敷き、中央寄せの縦積みで落ち着いて見せる
    -------------------------------------------------------------- */
 .p-station {
-  margin-top: 8vh;
-  padding-block: 8vh;
+  position: relative;
+  overflow: hidden;
+  margin-top: 10vh;
+  padding-block: 15vh;
+  /* Hero の風景とは変える。放送局＝電波の発信を、
+     上から広がる同心円で抽象的に表す。地は深いネイビー */
   background-color: var(--color-navy);
+  background-image:
+    /* 天井から落ちる光 */
+    radial-gradient(46% 42% at 50% 6%,
+      rgba(227, 230, 72, .10),
+      rgba(61, 176, 234, .07) 44%,
+      transparent 72%),
+    /* 電波の輪。上端の一点から広がる細いリング */
+    repeating-radial-gradient(circle at 50% 4%,
+      transparent 0 66px,
+      rgba(255, 255, 255, .05) 66px 67px);
   color: var(--color-white);
 }
 
+/* 面の上端を締める細い光の線（Hero のライムに合わせる） */
+.p-station::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background-image: linear-gradient(to right,
+    transparent, rgba(227, 230, 72, .5) 30%, rgba(227, 230, 72, .5) 70%, transparent);
+}
+
+/* 発信点。上端中央に小さな灯り */
+.p-station::after {
+  content: "";
+  position: absolute;
+  top: calc(4% - 4px);
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background-color: var(--color-lime);
+  box-shadow: 0 0 24px 4px rgba(227, 230, 72, .5);
+}
+
 .p-station__inner {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 40px 8%;
-  align-items: start;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.p-station__kicker {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  color: var(--color-lime);
 }
 
 /* 放送局ロゴ。濃紺地では読めない素材なので、白の版に載せて置く */
 .p-station__logo {
   display: inline-flex;
   align-items: center;
-  margin-bottom: 26px;
-  padding: 12px 18px;
+  margin-top: 26px;
+  padding: 14px 22px;
   background-color: var(--color-white);
 }
 
 .p-station__logo img {
   width: auto;
-  height: 42px;
-}
-
-.p-station__freq {
-  font-family: var(--font-display);
-  font-size: clamp(20px, 2.4vw, 32px);
-  font-weight: 800;
-  letter-spacing: -.02em;
-  color: var(--color-lime);
+  height: 44px;
 }
 
 .p-station__title {
-  margin-top: 12px;
+  margin-top: 30px;
   font-family: var(--font-display);
-  font-size: clamp(22px, 2.6vw, 36px);
+  font-size: clamp(28px, 3.4vw, 48px);
   font-weight: 800;
-  letter-spacing: -.02em;
+  letter-spacing: -.01em;
+  line-height: 1.1;
 }
 
 .p-station__sub {
-  margin-top: 8px;
+  margin-top: 12px;
   font-size: 12px;
   font-weight: 400;
+  letter-spacing: .1em;
   color: rgba(255, 255, 255, .6);
 }
 
-.p-station__link {
-  margin-top: 22px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .1em;
+/* 周波数。中央に細い区切りを挟んで2つ並べる */
+.p-station__freq {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: var(--color-lime);
 }
 
-.p-station__link a {
-  border-bottom: 2px solid var(--color-lime);
-  padding-bottom: 3px;
+.p-station__freq-sep {
+  width: 1px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, .3);
 }
 
 .p-station__text {
+  max-width: 640px;
+  margin-top: 30px;
   font-size: 13px;
   font-weight: 400;
-  line-height: 2.2;
+  line-height: 2.3;
   color: rgba(255, 255, 255, .82);
 }
 
+.p-station__link {
+  margin-top: 40px;
+}
+
+/* ライムの縁取りボタン。ホバーで面を反転させる */
+.p-station__link a {
+  display: inline-block;
+  padding: 15px 40px;
+  border: 1px solid var(--color-lime);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--color-lime);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.p-station__link a:hover {
+  background-color: var(--color-lime);
+  color: var(--color-navy);
+}
+
 @media (max-width: 760px) {
-  .p-station__inner {
-    grid-template-columns: 1fr;
+  .p-station {
+    padding-block: 12vh;
+  }
+
+  .p-station__title {
+    font-size: clamp(24px, 8vw, 34px);
+  }
+
+  .p-station__freq {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .p-station__freq-sep {
+    width: 24px;
+    height: 1px;
   }
 }
 
