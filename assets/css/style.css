@@ -1635,7 +1635,10 @@ main:has(#about-station) .p-station {
   /* 止め位置は TOP の構成にしかないので、Hero のあるページだけに効かせる。
      下層ページに掛けると、止め位置がフッターしかないため最下部へ飛ぶ */
   html:has([data-opening-hero]) {
-    scroll-snap-type: y mandatory;
+    /* mandatory はトラックパッドの慣性と scrub 演出を奪い合って
+       カクつくため proximity に。近くで止めたときだけ吸い付く。
+       Hero のコンセプト送りは GSAP 側の snap が担うのでここは緩くてよい */
+    scroll-snap-type: y proximity;
   }
 
   /* Hero にも止め位置を置くが、Hero の高さ（240svh）は画面より大きいので
