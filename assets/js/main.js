@@ -585,9 +585,25 @@
         return true;
       }
 
+      // 送り出し後、頂上（scrollY≈0）で「下」入力が来たら、Hero を頭から
+      // 再生し直す（＝再ロック）。頂上で待つ間は自由なので、勝手には引き戻さない。
+      function reengageIfTop(dir) {
+        if (locked || dir <= 0 || window.scrollY > 2) return false;
+        locked = true;
+        animating = false;
+        cooldownUntil = 0;
+        stageIdx = 0;
+        if (activeTL) activeTL.progress(0);
+        step(1);                           // 最初の段へ再生
+        return true;
+      }
+
       window.addEventListener('wheel', function (e) {
-        if (!locked) return;               // コンテンツ側：通常スクロール
         var dir = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0);
+        if (!locked) {                     // コンテンツ側：通常スクロール
+          if (reengageIfTop(dir)) e.preventDefault();  // 頂上で下 → 再生し直す
+          return;
+        }
         if (dir) step(dir);
         if (locked) e.preventDefault();    // 解放した瞬間の1操作だけは通す
       }, { passive: false });
@@ -597,9 +613,13 @@
         startY = e.touches ? e.touches[0].clientY : null;
       }, { passive: true });
       window.addEventListener('touchmove', function (e) {
-        if (!locked || startY == null) return;
+        if (startY == null) return;
         var y = e.touches[0].clientY;
         var dy = startY - y;               // 指を上へ（＝下スクロール）→ dy>0
+        if (!locked) {                     // 頂上で下スワイプ → 再生し直す
+          if (dy > 6 && reengageIfTop(1)) { startY = y; e.preventDefault(); }
+          return;
+        }
         if (Math.abs(dy) < 8) { e.preventDefault(); return; }
         step(dy > 0 ? 1 : -1);
         startY = y;
@@ -607,11 +627,14 @@
       }, { passive: false });
 
       window.addEventListener('keydown', function (e) {
-        if (!locked) return;
-        if (e.key === 'Home') { e.preventDefault(); playToStage(0); return; }
-        if (e.key === 'End') { e.preventDefault(); playToStage(stops().length - 1); return; }
         var down = (e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Spacebar');
         var up = (e.key === 'PageUp' || e.key === 'ArrowUp');
+        if (!locked) {                     // 頂上で下キー → 再生し直す
+          if (down && reengageIfTop(1)) e.preventDefault();
+          return;
+        }
+        if (e.key === 'Home') { e.preventDefault(); playToStage(0); return; }
+        if (e.key === 'End') { e.preventDefault(); playToStage(stops().length - 1); return; }
         if (!down && !up) return;
         step(down ? 1 : -1);
         if (locked) e.preventDefault();
