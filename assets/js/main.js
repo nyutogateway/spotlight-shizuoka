@@ -589,10 +589,12 @@
         return true;
       }
 
-      // 送り出し後、頂上（scrollY≈0）で「下」入力が来たら、Hero を頭から
-      // 再生し直す（＝再ロック）。頂上で待つ間は自由なので、勝手には引き戻さない。
+      // 頂上（scrollY≈0）で「下」入力が来たら、Hero を頭から再生し直す（再ロック）。
+      // ただし Hero が頭出し(progress 0)のときだけ。送り出し直後（progress 1）は
+      // まだ頂上に居るので、ここで再生し直すと下（コンテンツ）へ行けなくなる。
       function reengageIfTop(dir) {
         if (locked || dir <= 0 || window.scrollY > 2) return false;
+        if (!activeTL || activeTL.progress() > 0.01) return false;  // 頭出しのときだけ
         locked = true;
         animating = false;
         cooldownUntil = 0;
