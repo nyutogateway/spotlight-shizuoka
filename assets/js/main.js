@@ -1037,6 +1037,14 @@
     initHeader();
     initMenu();
 
+    /* 放送局の波形は SMIL(<animate>)で動かしている（Safari/iOS 対応のため）。
+       SMIL は CSS の prefers-reduced-motion では止まらないので、ここで止める */
+    if (prefersReducedMotion) {
+      document.querySelectorAll('.p-station__wave').forEach(function (svg) {
+        if (typeof svg.pauseAnimations === 'function') svg.pauseAnimations();
+      });
+    }
+
     var hero = document.querySelector('[data-opening-hero]');
     if (hero) {
       // Hero がこけてもページ全体は止めない
