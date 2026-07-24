@@ -407,8 +407,8 @@
     exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
     exitLiftMobile: 30,
     headerLogoAt: 0.40,      // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
-    conceptStagger: 0.035,   // コンセプト1行ずつの間隔
-    conceptStaggerNarrow: 0.03,
+    conceptStagger: 0.055,   // コンセプト1行ずつの間隔
+    conceptStaggerNarrow: 0.045,
     conceptSnapFrom: 0.60    // ここから先で止めたら、コンセプトが出そろう位置まで送る
   };
 
@@ -619,9 +619,11 @@
         }, .50)
         .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50)
 
+        /* 全画面になってから一拍おく。ここで風景だけを見せる */
+
         /* Phase 5 — 風景の上でコンセプト文を1行ずつ読ませる */
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .13 }, .72)
-        .set(concept, { opacity: 1 }, .74)
+        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .13 }, .90)
+        .set(concept, { opacity: 1 }, .92)
         .fromTo(conceptLines,
           { opacity: 0, y: 24 },
           {
@@ -629,23 +631,23 @@
             y: 0,
             stagger: HERO_SETTINGS.conceptStagger,
             ease: 'none',
-            duration: .07
-          }, .76)
+            duration: .10
+          }, .94)
 
         /* 読む時間 */
-        .to({}, { duration: .03 });
+        .to({}, { duration: .08 });
 
       /* Phase 6 — 次の誌面へ送り出す */
-      addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.0);
+      addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.34);
       // 持ち上げたときに覗くのは、次のセクションと同じ本文の地色
       tl.to(sticky, {
         backgroundColor: pageBackground(),
         ease: 'none',
         duration: .10
-      }, 1.0);
+      }, 1.34);
 
       // コンセプトが出そろってから送り出しが始まるまでの真ん中
-      conceptStop = .985 / tl.duration();
+      conceptStop = 1.30 / tl.duration();
     });
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
@@ -669,8 +671,9 @@
           duration: .32
         }, .28)
         .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .14 }, .62)
-        .set(concept, { opacity: 1 }, .64)
+        /* 全画面になってから一拍おく */
+        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .14 }, .72)
+        .set(concept, { opacity: 1 }, .74)
         .fromTo(conceptLines,
           { opacity: 0, y: 20 },
           {
@@ -678,18 +681,18 @@
             y: 0,
             stagger: HERO_SETTINGS.conceptStaggerNarrow,
             ease: 'none',
-            duration: .06
-          }, .66)
-        .to({}, { duration: .10 });
+            duration: .08
+          }, .76)
+        .to({}, { duration: .08 });
 
-      addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile);
+      addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile, 1.20);
       tlNarrow.to(sticky, {
         backgroundColor: pageBackground(),
         ease: 'none',
         duration: .10
-      }, '<');
+      }, 1.20);
 
-      conceptStop = .89 / tlNarrow.duration();
+      conceptStop = 1.16 / tlNarrow.duration();
     });
 
     // 画像やフォントが揃ってから測り直す
