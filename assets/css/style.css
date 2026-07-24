@@ -1858,9 +1858,14 @@ main:has(#about-station) .p-station {
 .p-station {
   position: relative;
   overflow: hidden;
-  margin-top: 10vh;
-  /* 下は詰めてフッターへ continuously つなぐ（下記 :has で margin も消す） */
-  padding-block: 15vh 16vh;
+  /* ヘッダー込みで1画面（100svh）。ヘッダーが上に重なる分だけ上に余白を足し、
+     見える範囲で内容を縦中央に置く。下はフッターへそのままつなぐ */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  margin-top: 0;
+  padding-block: calc(var(--header-height) + 5vh) 12vh;
   /* 地は深いネイビー。中央に光を溜めて暗くなりすぎないようにする（青＋ライム）。
      音の波形は別のインラインSVG(.p-station__wave)で線そのものを動かす */
   background-color: var(--color-navy);

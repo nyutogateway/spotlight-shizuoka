@@ -517,11 +517,13 @@
 
     /* ヘッダーのロゴの出し分け。頭（進捗が浅い）のうちは大きな Hero ロゴが
        主役なので隠し、reveal が進んだコンセプト段やコンテンツ側では出す。
-       scrub なので進捗はスクロールに追従する＝進捗だけで判定できる */
+       Hero を通り過ぎていれば（スクロール位置で判定）常に出す＝リロードで
+       途中に居ても scrub の追従を待たずに正しく表示される */
     function updateHeaderLogo() {
       if (!header) return;
+      var pastHero = window.scrollY > (hero.offsetHeight - window.innerHeight) * 0.6;
       var p = activeTL ? activeTL.progress() : 0;
-      header.classList.toggle('is-logo-hidden', p < HERO_SETTINGS.headerLogoAt);
+      header.classList.toggle('is-logo-hidden', !pastHero && p < HERO_SETTINGS.headerLogoAt);
     }
 
     /* スクロールに滑らかに追従（scrub）して“流れる”ように再生する。
@@ -556,6 +558,8 @@
 
     // 頭出しの状態：Hero の大きなロゴが主役なので、ヘッダー側は隠しておく
     if (header) header.classList.add('is-logo-hidden');
+    // Hero を通り過ぎたら確実にロゴを出す（scrub の追従待ちに依存しない）
+    window.addEventListener('scroll', updateHeaderLogo, { passive: true });
 
 
     /* 読み込み直後の登場。スクロール演出とぶつからないよう、
