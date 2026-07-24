@@ -237,6 +237,21 @@ body {
   color: var(--color-white);
 }
 
+/* 放送局セクション（同じネイビー地）の直後は、隙間を作らず
+   一枚の面としてフッターへつなぐ。
+   :has 非対応ブラウザでは放送局側の負マージンで詰める */
+.p-station {
+  margin-bottom: -72px;
+}
+
+main:has(#about-station) + .l-footer {
+  margin-top: 0;
+}
+
+main:has(#about-station) .p-station {
+  margin-bottom: 0;
+}
+
 .l-footer__inner {
   display: grid;
   gap: 30px;
@@ -1751,20 +1766,27 @@ body {
   position: relative;
   overflow: hidden;
   margin-top: 10vh;
-  padding-block: 15vh;
-  /* Hero の風景とは変える。放送局＝電波の発信を、
-     上から広がる同心円で抽象的に表す。地は深いネイビー */
+  /* 下は詰めてフッターへ continuously つなぐ（下記 :has で margin も消す） */
+  padding-block: 15vh 16vh;
+  /* Hero の風景とは変える。ラジオの周波数ダイヤルを思わせる目盛りを
+     下側にだけ薄く敷く。地は深いネイビーで、そのままフッターへ続く */
   background-color: var(--color-navy);
   background-image:
-    /* 天井から落ちる光 */
-    radial-gradient(46% 42% at 50% 6%,
-      rgba(227, 230, 72, .10),
-      rgba(61, 176, 234, .07) 44%,
-      transparent 72%),
-    /* 電波の輪。上端の一点から広がる細いリング */
-    repeating-radial-gradient(circle at 50% 4%,
-      transparent 0 66px,
-      rgba(255, 255, 255, .05) 66px 67px);
+    /* 中央上のほのかな灯り */
+    radial-gradient(50% 44% at 50% 30%,
+      rgba(61, 176, 234, .09),
+      transparent 70%),
+    /* 太めの主目盛り（10刻み） */
+    repeating-linear-gradient(90deg,
+      transparent 0 79px,
+      rgba(255, 255, 255, .10) 79px 80px),
+    /* 細かい副目盛り */
+    repeating-linear-gradient(90deg,
+      transparent 0 15px,
+      rgba(255, 255, 255, .04) 15px 16px);
+  background-repeat: no-repeat, repeat-x, repeat-x;
+  background-position: center, left bottom, left bottom;
+  background-size: auto, auto 90px, auto 46px;
   color: var(--color-white);
 }
 
@@ -1778,18 +1800,17 @@ body {
     transparent, rgba(227, 230, 72, .5) 30%, rgba(227, 230, 72, .5) 70%, transparent);
 }
 
-/* 発信点。上端中央に小さな灯り */
+/* ダイヤルの指針。目盛りの上に立つライムの縦線 */
 .p-station::after {
   content: "";
   position: absolute;
-  top: calc(4% - 4px);
   left: 50%;
-  width: 8px;
-  height: 8px;
+  bottom: 0;
+  width: 2px;
+  height: 84px;
   transform: translateX(-50%);
-  border-radius: 999px;
-  background-color: var(--color-lime);
-  box-shadow: 0 0 24px 4px rgba(227, 230, 72, .5);
+  background-image: linear-gradient(to top,
+    var(--color-lime), rgba(227, 230, 72, 0));
 }
 
 .p-station__inner {
