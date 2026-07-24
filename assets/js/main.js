@@ -420,7 +420,7 @@
      ・将来 WordPress へ移すときはこの関数ごと差し替えられるようにしてある。
      ------------------------------------------------------------------ */
   var HERO_SETTINGS = {
-    scrub: 0.9,
+    scrub: 1.3,   // 慣性中のジッターを吸って、再生をなめらかに保つ
     imageScaleStart: 1.24,   // CSS の --opening-image-scale と揃える
     imageScaleMid: 1.12,
     imageScaleEnd: 1,
@@ -575,9 +575,9 @@
               }
               return pts[0];
             },
-            duration: { min: 1.5, max: 2.4 },  // 一定尺＝一定速度に近づける
+            duration: { min: 2.0, max: 2.9 },  // 一定尺＝一定速度に近づける（少し緩やかに）
             delay: .02,                        // スクロール直後に再生を始める
-            ease: 'power1.inOut',
+            ease: 'power2.inOut',              // 立ち上がり・収まりをより滑らかに
             inertia: false
           }
         }
