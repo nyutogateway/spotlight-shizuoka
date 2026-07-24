@@ -420,7 +420,6 @@
      ・将来 WordPress へ移すときはこの関数ごと差し替えられるようにしてある。
      ------------------------------------------------------------------ */
   var HERO_SETTINGS = {
-    scrub: 1.0,   // 平滑化。ゲートは等速(linear)で送り、ここで滑らかな立ち上がり/収まりを作る
     imageScaleStart: 1.24,   // CSS の --opening-image-scale と揃える
     imageScaleMid: 1.12,
     imageScaleEnd: 1,
@@ -544,29 +543,25 @@
     /* 風景とコンセプト文が出そろう位置。各ブランチが実際の値を入れる。
        ここは見せ場なので、途中の半端な状態で止めない */
     var conceptStop = 1;
+    // ゲートが直接ドライブする、いま有効なタイムライン
+    var activeTL = null;
 
+    /* スクロール量には結びつけない（scrub なし）。
+       停止したタイムラインを initHeroGate が一定尺で直接再生する。
+       ＝アニメ中はスクロールを動かさないので、いちばん滑らか */
     function timeline() {
-      return gsap.timeline({
-        scrollTrigger: {
-          trigger: hero,
-          start: 'top top',
-          end: 'bottom bottom',
-          // スクロール量ではなく、下の initHeroGate が一定尺でスクロールを送る。
-          // scrub は小さめにして、その動きへ素直に追従させる
-          scrub: HERO_SETTINGS.scrub,
-          invalidateOnRefresh: true
-        }
-      });
+      return gsap.timeline({ paused: true });
     }
 
     initHeaderLogoHandoff(hero);
 
-    /* Hero を飛び越えさせないゲート。
-       Hero の中ではネイティブのスクロールを止め、ホイール／スワイプ／キーの
-       1操作ごとに「止め位置」を1つずつ、一定の尺で送る。
-       これで どんなに強く速く弾いても、1段ずつしか進めない（飛び越え不可）。
-       止め位置：0（頭出し）/ conceptStop（コンセプト出そろい）/ 1（送り出し）。
-       Hero を抜けた下のコンテンツでは通常スクロールへ戻す。 */
+    /* Hero のゲート。
+       Hero にいる間はネイティブのスクロールを完全にロックし（＝アニメ中は一切
+       スクロールしない）、ホイール／スワイプ／キーの1操作ごとに、停止した
+       タイムラインを「止め位置」まで一定の尺で“直接”再生する。
+       スクロール量に一切結びつけないので、速さに依存せず、飛び越えもせず、いちばん滑らか。
+       止め位置（タイムライン進捗）：0（頭出し）/ conceptStop（コンセプト出そろい）/ 1（送り出し）。
+       送り出し済み（最終段）で さらに下 → ロック解除してコンテンツへ。 */
     function initHeroGate() {
       if (prefersReducedMotion) return;
       if (typeof gsap === 'undefined' || typeof gsap.to !== 'function') return;
@@ -574,56 +569,47 @@
       var animating = false;
       var cooldownUntil = 0;
       var stageIdx = 0;
+      var locked = true;                 // Hero 内：スクロール禁止＋直接再生
 
-      function travel() { return Math.max(hero.offsetHeight - window.innerHeight, 1); }
-      function stages() { var T = travel(); return [0, conceptStop * T, T]; }
-      function inHero() { return window.scrollY <= travel() + 2; }
-      function nearest(s, y) {
-        var best = 0, bd = Infinity;
-        for (var i = 0; i < s.length; i++) {
-          var d = Math.abs(s[i] - y);
-          if (d < bd) { bd = d; best = i; }
-        }
-        return best;
-      }
+      function stops() { return [0, conceptStop, 1]; }   // タイムライン進捗の止め位置
 
-      // 現在地から止め位置 i まで、距離に応じた一定の尺で滑らかに送る
-      function tweenTo(i) {
-        var s = stages(), T = travel();
-        i = Math.max(0, Math.min(s.length - 1, i));
+      // 現在の進捗から止め位置 i まで、距離に応じた一定の尺で“直接”再生する
+      function playToStage(i) {
+        var ps = stops();
+        i = Math.max(0, Math.min(ps.length - 1, i));
         stageIdx = i;
-        var from = window.scrollY;
-        var frac = Math.abs(s[i] - from) / T;
-        var dur = Math.min(2.4, Math.max(0.7, 2.6 * frac));
+        if (!activeTL) return;
+        var fromP = activeTL.progress();
+        var toP = ps[i];
+        var dist = Math.abs(toP - fromP);
+        if (dist < 0.002) return;
         animating = true;
-        var proxy = { y: from };
-        gsap.to(proxy, {
-          y: s[i],
-          duration: dur,
-          // 等速で送る（加速なし）。滑らかな立ち上がり・収まりは scrub 側が作る
-          ease: 'none',
+        activeTL.tweenTo(toP * activeTL.duration(), {
+          duration: Math.min(2.4, Math.max(0.7, 2.7 * dist)),
+          ease: 'sine.inOut',            // 緩やかなS字。加速感は最小
           overwrite: true,
-          onUpdate: function () { window.scrollTo(0, proxy.y); },
-          onComplete: function () { animating = false; cooldownUntil = performance.now() + 180; }
+          onComplete: function () { animating = false; cooldownUntil = performance.now() + 160; }
         });
       }
 
-      // 1操作を処理。true を返したら呼び出し側で preventDefault する
+      // 1操作を処理。true=消費した（preventDefault する）
       function step(dir) {
         if (animating || performance.now() < cooldownUntil) return true;
-        var s = stages();
-        stageIdx = nearest(s, window.scrollY);
-        if (dir > 0 && stageIdx >= s.length - 1) return false; // 送り出し済み → 下へ解放
-        if (dir < 0 && stageIdx <= 0) return false;            // 先頭より上はない
-        tweenTo(stageIdx + dir);
+        if (dir > 0) {
+          if (stageIdx >= stops().length - 1) { locked = false; return false; } // 解放
+          playToStage(stageIdx + 1);
+          return true;
+        }
+        if (stageIdx <= 0) return false;   // 先頭より上はない
+        playToStage(stageIdx - 1);
         return true;
       }
 
       window.addEventListener('wheel', function (e) {
-        if (!inHero()) return;
+        if (!locked) return;               // コンテンツ側：通常スクロール
         var dir = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0);
-        var handled = dir ? step(dir) : false;
-        if (handled || animating) e.preventDefault();
+        if (dir) step(dir);
+        if (locked) e.preventDefault();    // 解放した瞬間の1操作だけは通す
       }, { passive: false });
 
       var startY = null;
@@ -631,38 +617,35 @@
         startY = e.touches ? e.touches[0].clientY : null;
       }, { passive: true });
       window.addEventListener('touchmove', function (e) {
-        if (!inHero() || startY == null) return;
+        if (!locked || startY == null) return;
         var y = e.touches[0].clientY;
-        var dy = startY - y;                    // 指を上へ（＝下スクロール）→ dy>0
-        if (Math.abs(dy) < 8) { if (animating) e.preventDefault(); return; }
-        var handled = step(dy > 0 ? 1 : -1);
+        var dy = startY - y;               // 指を上へ（＝下スクロール）→ dy>0
+        if (Math.abs(dy) < 8) { e.preventDefault(); return; }
+        step(dy > 0 ? 1 : -1);
         startY = y;
-        if (handled || animating) e.preventDefault();
+        if (locked) e.preventDefault();
       }, { passive: false });
 
       window.addEventListener('keydown', function (e) {
-        if (!inHero()) return;
-        if (e.key === 'Home') { e.preventDefault(); tweenTo(0); return; }
-        if (e.key === 'End') { e.preventDefault(); tweenTo(stages().length - 1); return; }
+        if (!locked) return;
+        if (e.key === 'Home') { e.preventDefault(); playToStage(0); return; }
+        if (e.key === 'End') { e.preventDefault(); playToStage(stops().length - 1); return; }
         var down = (e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Spacebar');
         var up = (e.key === 'PageUp' || e.key === 'ArrowUp');
         if (!down && !up) return;
-        var handled = step(down ? 1 : -1);
-        if (handled || animating) e.preventDefault();
+        step(down ? 1 : -1);
+        if (locked) e.preventDefault();
       });
 
-      // 安全網：スクロールバー等でズレたら、落ち着いてから最寄りの止め位置へ寄せる
-      var settleTimer = null;
+      // ロック中は頂上へ固定（アニメ中は一切スクロールさせない）。
+      // 送り出し後はロックを解いたまま＝以降は普通にスクロールできる
       window.addEventListener('scroll', function () {
-        if (animating || !inHero()) return;
-        if (settleTimer) clearTimeout(settleTimer);
-        settleTimer = setTimeout(function () {
-          if (animating || !inHero()) return;
-          var s = stages();
-          var i = nearest(s, window.scrollY);
-          if (Math.abs(window.scrollY - s[i]) > 6) tweenTo(i);
-          else stageIdx = i;
-        }, 120);
+        if (locked && window.scrollY !== 0) window.scrollTo(0, 0);
+      }, { passive: true });
+
+      // リサイズで寸法が変わったら測り直す
+      window.addEventListener('resize', function () {
+        if (activeTL) { activeTL.invalidate(); activeTL.progress(activeTL.progress()); }
       }, { passive: true });
     }
 
@@ -768,6 +751,7 @@
 
       // コンセプトが出そろってから送り出しが始まるまでの真ん中
       conceptStop = 1.30 / tl.duration();
+      activeTL = tl;
     });
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
@@ -813,6 +797,7 @@
       }, 1.20);
 
       conceptStop = 1.16 / tlNarrow.duration();
+      activeTL = tlNarrow;
     });
 
     // Hero を飛び越えさせないゲートを有効化（conceptStop は各ブランチが設定済み）

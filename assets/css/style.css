@@ -1079,7 +1079,7 @@ main:has(#about-station) .p-station {
    ・調整値は下の :root にまとめてある。
    -------------------------------------------------------------- */
 :root {
-  --opening-scroll-length: 290svh;  /* Hero 全体のスクロール距離 */
+  --opening-scroll-length: 100svh;  /* Hero は1画面ぶん。再生はスクロール量に結びつけずゲートが直接ドライブ */
   --opening-side: 7vw;              /* Hero の左右余白 */
   --opening-logo-width: min(52vw, 700px, 84svh);   /* 平たい画面では高さでも抑える */
   --opening-window-width: min(30vw, 52svh);
@@ -1438,7 +1438,7 @@ main:has(#about-station) .p-station {
 
 @media (max-width: 900px) {
   :root {
-    --opening-scroll-length: 180svh;
+    --opening-scroll-length: 100svh;
     --opening-side: var(--container-pad);
     --opening-logo-width: min(88vw, 440px, 50svh);
     --opening-window-width: min(52vw, 30svh);
