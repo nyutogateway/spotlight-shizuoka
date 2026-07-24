@@ -249,6 +249,43 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
+  // VOICE で見せるグループ数。実データが足りないぶんは空き枠で埋める
+  var VOICE_GROUP_TOTAL = 6;
+
+  /* 空き枠のグループ。データが揃うまで COMING SOON として先に置く。
+     見出しは実グループと同じ構成にし、本体だけプレースホルダーにする */
+  function buildComingGroup(index) {
+    var section = el('section', 'p-voice p-voice--coming' +
+      (index % 2 === 1 ? ' p-voice--flip' : ''));
+    section.id = 'group-' + (index + 1 < 10 ? '0' : '') + (index + 1);
+
+    var inner = el('div', 'p-voice__inner l-container');
+
+    var head = el('header', 'p-voice__head');
+    var label = el('p', 'p-voice__group');
+    label.appendChild(el('span', 'p-voice__group-label', 'GROUP'));
+    label.appendChild(el('span', 'p-voice__group-num', String(index + 1)));
+    head.appendChild(label);
+    head.appendChild(el('h2', 'p-voice__title', 'VOICE'));
+
+    var note = el('div', 'p-voice__note');
+    note.appendChild(el('p', 'p-voice__range', 'NEXT'));
+    note.appendChild(el('p', 'p-voice__text',
+      '次に登場するリーダーを準備しています。'));
+    head.appendChild(note);
+
+    var body = el('div', 'p-voice__body');
+    var placeholder = el('div', 'p-voice__coming');
+    placeholder.appendChild(el('p', 'p-voice__coming-label', 'COMING SOON'));
+    placeholder.appendChild(el('p', 'p-voice__coming-sub', '近日公開'));
+    body.appendChild(placeholder);
+
+    inner.appendChild(head);
+    inner.appendChild(body);
+    section.appendChild(inner);
+    return section;
+  }
+
   function renderVoices(container, data) {
     var frag = document.createDocumentFragment();
 
@@ -380,6 +417,11 @@
       section.appendChild(inner);
       frag.appendChild(section);
     });
+
+    // 実データのぶんの後ろに、目標数まで空き枠を足す
+    for (var g = data.groups.length; g < VOICE_GROUP_TOTAL; g++) {
+      frag.appendChild(buildComingGroup(g));
+    }
 
     container.appendChild(frag);
   }

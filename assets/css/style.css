@@ -1700,6 +1700,50 @@ body {
 }
 
 /* --------------------------------------------------------------
+   Project / voice（空き枠。データが揃うまで COMING SOON）
+   見出しは通常のグループと同じ。本体だけプレースホルダーにする
+   -------------------------------------------------------------- */
+.p-voice__coming {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: min(44svh, 360px);
+  border: 1px dashed var(--color-line-strong);
+  background-color: rgba(255, 255, 255, .35);
+}
+
+.p-voice__coming-label {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 40px);
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: var(--color-line-strong);
+}
+
+.p-voice__coming-sub {
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--color-sub);
+}
+
+/* 空き枠は先頭カードを持たないので、本体は1カラムで中央に置く */
+.p-voice--coming .p-voice__body,
+.p-voice--coming.p-voice--flip .p-voice__body {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .p-voice__coming {
+    min-height: 200px;
+  }
+}
+
+/* --------------------------------------------------------------
    Project / station（運営する放送局の紹介。シリーズ共通の枠）
    静岡の風景を暗く敷き、中央寄せの縦積みで落ち着いて見せる
    -------------------------------------------------------------- */
