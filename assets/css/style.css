@@ -1328,7 +1328,9 @@ main:has(#about-station) .p-station {
 
 .has-js .opening-hero__concept {
   position: absolute;
-  top: 50%;
+  /* コンセプト段ではヘッダー（ネイビー地）が上に出るので、その下の
+     見える範囲で縦中央になるよう、ヘッダー高の半分だけ下げる */
+  top: calc(50% + var(--header-height) / 2);
   left: 50%;
   z-index: 6;
   width: min(760px, 82vw);
