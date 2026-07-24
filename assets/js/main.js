@@ -420,7 +420,7 @@
      ・将来 WordPress へ移すときはこの関数ごと差し替えられるようにしてある。
      ------------------------------------------------------------------ */
   var HERO_SETTINGS = {
-    scrub: 1.3,   // 慣性中のジッターを吸って、再生をなめらかに保つ
+    scrub: 1.6,   // 慣性中のジッターを吸って、再生をなめらかに保つ
     imageScaleStart: 1.24,   // CSS の --opening-image-scale と揃える
     imageScaleMid: 1.12,
     imageScaleEnd: 1,
@@ -559,19 +559,26 @@
           onUpdate: function (self) { heroDir = self.direction; },
           /* スクロールの「速さ」に依存させず、1本の滑らかなアニメとして再生する。
              止め位置は 3つだけ：頭出し(0) / コンセプトが出そろう(conceptStop) / 送り出し(1)。
-             少しでもスクロールしたら、その方向の次の止め位置まで一定の尺で再生し切る。
+             止め位置の近く（＝静止中）ではその場に留まり、そこから動かない。
+             一定量スクロールしたら、その方向の次の止め位置まで一定の尺で再生し切る。
              duration を固定気味にすることで、速く振っても遅く振っても同じ速度で動く */
           snap: {
             snapTo: function (value) {
               var pts = [0, conceptStop, 1];
+              var hold = .03;                 // この範囲内は「止め位置に居る」とみなし動かさない
+              // すでに止め位置の近くにいるなら、そこへ留める（勝手に動き出さない）
+              for (var k = 0; k < pts.length; k++) {
+                if (Math.abs(value - pts[k]) < hold) return pts[k];
+              }
+              // 止め位置の間にいるときだけ、スクロール方向の次の止め位置へ送る
               if (heroDir >= 0) {
                 for (var i = 0; i < pts.length; i++) {
-                  if (pts[i] > value + .004) return pts[i];
+                  if (pts[i] > value) return pts[i];
                 }
                 return pts[pts.length - 1];
               }
               for (var j = pts.length - 1; j >= 0; j--) {
-                if (pts[j] < value - .004) return pts[j];
+                if (pts[j] < value) return pts[j];
               }
               return pts[0];
             },
