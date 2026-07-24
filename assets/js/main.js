@@ -617,20 +617,16 @@
         if (locked) e.preventDefault();
       });
 
-      // ロック中は頂上へ固定（アニメ中は一切スクロールさせない）。
-      // 送り出し後にコンテンツから頂上（scrollY 0）まで戻ってきたら、
-      // Hero を頭出し（stage 0）へ戻して再ロックする。
-      // ＝いつでも top に戻れば、いつもの Hero の頭から始められる
+      // ロック中だけ頂上へ固定（アニメ中は一切スクロールさせない）。
+      // 送り出し後はロックを解いたまま普通にスクロールできる。
+      // 頂上（scrollY≈0）まで戻ってきたら、Hero の見た目だけ頭出しへ戻す
+      // （再ロックも scrollTo もしない＝勝手に top へ吸い寄せない）。
       window.addEventListener('scroll', function () {
         if (locked) {
           if (window.scrollY !== 0) window.scrollTo(0, 0);
-        } else if (window.scrollY <= 0) {
-          locked = true;
-          animating = false;
-          cooldownUntil = 0;
+        } else if (window.scrollY <= 2 && activeTL && activeTL.progress() > 0) {
           stageIdx = 0;
-          if (activeTL) activeTL.progress(0);
-          window.scrollTo(0, 0);
+          activeTL.progress(0);
         }
       }, { passive: true });
 
