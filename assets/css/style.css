@@ -1565,9 +1565,11 @@ main:has(#about-station) .p-station {
 }
 
 /* 横スクロールはさせない。残り4人は幅を分け合って必ず収める
-   （5人目までは見出し脇の送りボタンと自動送りで入れ替わる） */
+   （5人目までは見出し脇の送りボタンと自動送りで入れ替わる）
+   overflow-x:clip なら横だけ切って、縦（カード情報の下側）は
+   切らずに出せる。overflow:hidden だと縦も一緒に切れてしまう */
 .p-voice__rail {
-  overflow: hidden;
+  overflow-x: clip;
   min-width: 0;
 }
 
