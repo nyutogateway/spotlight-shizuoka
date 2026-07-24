@@ -747,13 +747,12 @@ main:has(#about-station) .p-station {
   box-shadow: inset 0 0 0 1px var(--color-line);
 }
 
-/* 素材ごとに縦横比も地色もばらつくので、幅・高さの両方を小さく縛って
-   「同じくらいの大きさの印」に見えるところまで落とす */
+/* 素材ごとに地色が焼き込まれているので、余白を作らず
+   カード面いっぱいに敷いて「印」として見せる */
 .c-card__logo img {
-  max-width: 96%;
-  max-height: 72%;
-  width: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform .55s var(--ease);
 }
 
