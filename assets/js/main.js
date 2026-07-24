@@ -431,10 +431,9 @@
     logoLift: 24,            // ロゴが退くときに動く量(px)
     exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
     exitLiftMobile: 30,
-    headerLogoAt: 0.40,      // ヘッダーのロゴが出てくる位置（Heroスクロールに対する割合）
-    conceptStagger: 0.055,   // コンセプト1行ずつの間隔
-    conceptStaggerNarrow: 0.045,
-    conceptSnapFrom: 0.60    // ここから先で止めたら、コンセプトが出そろう位置まで送る
+    headerLogoAt: 0.46,      // ここを超えたらヘッダーのロゴを出す（タイムライン進捗の割合）
+    conceptStagger: 0.14,    // コンセプト1行ずつの間隔（大きいほどゆっくり出る）
+    conceptStaggerNarrow: 0.11
   };
 
   /* 切り抜きの形。紙面から切り抜いた穴のつもりで、少しだけ辺を崩す。
@@ -457,36 +456,6 @@
     var value = getComputedStyle(document.documentElement)
       .getPropertyValue('--color-bg').trim();
     return value || '#E9EDF0';
-  }
-
-  /* ヘッダーのロゴの受け渡し。
-     Hero の頭では大きなロゴだけを見せたいので、ヘッダー側は隠しておき、
-     Hero を離れはじめたところで出す。二重に見せない。
-     GSAP が無いときはこの関数自体を呼ばないので、ヘッダーは通常表示のまま */
-  function initHeaderLogoHandoff(hero) {
-    var header = document.getElementById('js-header');
-    if (!header) return;
-
-    var threshold = 1;
-
-    // 測るのはリサイズのときだけ。スクロール中はクラスを切り替えるだけにする
-    function measure() {
-      var travel = hero.offsetHeight - window.innerHeight;
-      threshold = Math.max(travel * HERO_SETTINGS.headerLogoAt, 1);
-    }
-
-    function update() {
-      header.classList.toggle('is-logo-hidden', window.scrollY < threshold);
-    }
-
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', function () {
-      measure();
-      update();
-    }, { passive: true });
-
-    measure();
-    update();
   }
 
   /* Hero の締め。風景とコンセプト文をまとめて少し持ち上げ、
@@ -545,15 +514,26 @@
     var conceptStop = 1;
     // ゲートが直接ドライブする、いま有効なタイムライン
     var activeTL = null;
+    var header = document.getElementById('js-header');
 
     /* スクロール量には結びつけない（scrub なし）。
        停止したタイムラインを initHeroGate が一定尺で直接再生する。
-       ＝アニメ中はスクロールを動かさないので、いちばん滑らか */
+       ＝アニメ中はスクロールを動かさないので、いちばん滑らか。
+       ヘッダーのロゴは進捗で受け渡す：頭では大きな Hero ロゴが主役なので隠し、
+       reveal が進んだら（コンセプト段では）ヘッダーのロゴを出す */
     function timeline() {
-      return gsap.timeline({ paused: true });
+      return gsap.timeline({
+        paused: true,
+        onUpdate: function () {
+          if (header) {
+            header.classList.toggle('is-logo-hidden', this.progress() < HERO_SETTINGS.headerLogoAt);
+          }
+        }
+      });
     }
 
-    initHeaderLogoHandoff(hero);
+    // 頭出しの状態：Hero の大きなロゴが主役なので、ヘッダー側は隠しておく
+    if (header) header.classList.add('is-logo-hidden');
 
     /* Hero のゲート。
        Hero にいる間はネイティブのスクロールを完全にロックし（＝アニメ中は一切
@@ -585,7 +565,7 @@
         if (dist < 0.002) return;
         animating = true;
         activeTL.tweenTo(toP * activeTL.duration(), {
-          duration: Math.min(2.4, Math.max(0.7, 2.7 * dist)),
+          duration: Math.min(3.0, Math.max(0.7, 3.2 * dist)),
           ease: 'sine.inOut',            // 緩やかなS字。加速感は最小
           overwrite: true,
           onComplete: function () { animating = false; cooldownUntil = performance.now() + 160; }
@@ -724,33 +704,33 @@
 
         /* 全画面になってから一拍おく。ここで風景だけを見せる */
 
-        /* Phase 5 — 風景の上でコンセプト文を1行ずつ読ませる */
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .13 }, .90)
+        /* Phase 5 — 風景の上でコンセプト文を1行ずつ、ゆっくり読ませる */
+        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16 }, .88)
         .set(concept, { opacity: 1 }, .92)
         .fromTo(conceptLines,
-          { opacity: 0, y: 24 },
+          { opacity: 0, y: 22 },
           {
             opacity: 1,
             y: 0,
             stagger: HERO_SETTINGS.conceptStagger,
-            ease: 'none',
-            duration: .10
-          }, .94)
+            ease: 'power2.out',
+            duration: .20
+          }, .96)
 
         /* 読む時間 */
-        .to({}, { duration: .08 });
+        .to({}, { duration: .14 });
 
       /* Phase 6 — 次の誌面へ送り出す */
-      addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.34);
+      addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.86);
       // 持ち上げたときに覗くのは、次のセクションと同じ本文の地色
       tl.to(sticky, {
         backgroundColor: pageBackground(),
         ease: 'none',
         duration: .10
-      }, 1.34);
+      }, 1.86);
 
       // コンセプトが出そろってから送り出しが始まるまでの真ん中
-      conceptStop = 1.30 / tl.duration();
+      conceptStop = 1.74 / tl.duration();
       activeTL = tl;
     });
 
@@ -776,27 +756,27 @@
         }, .28)
         .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
         /* 全画面になってから一拍おく */
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .14 }, .72)
+        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16 }, .70)
         .set(concept, { opacity: 1 }, .74)
         .fromTo(conceptLines,
-          { opacity: 0, y: 20 },
+          { opacity: 0, y: 18 },
           {
             opacity: 1,
             y: 0,
             stagger: HERO_SETTINGS.conceptStaggerNarrow,
-            ease: 'none',
-            duration: .08
-          }, .76)
-        .to({}, { duration: .08 });
+            ease: 'power2.out',
+            duration: .18
+          }, .78)
+        .to({}, { duration: .14 });
 
-      addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile, 1.20);
+      addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile, 1.66);
       tlNarrow.to(sticky, {
         backgroundColor: pageBackground(),
         ease: 'none',
         duration: .10
-      }, 1.20);
+      }, 1.66);
 
-      conceptStop = 1.16 / tlNarrow.duration();
+      conceptStop = 1.54 / tlNarrow.duration();
       activeTL = tlNarrow;
     });
 
