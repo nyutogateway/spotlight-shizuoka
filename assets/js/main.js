@@ -516,19 +516,23 @@
     var activeTL = null;
     var header = document.getElementById('js-header');
 
+    /* ヘッダーのロゴの出し分け。Hero が主役で見えている頭のうちだけ隠し、
+       コンセプト段（進捗が進んだ）やコンテンツ側では出す。
+       ＝スクロール位置と進捗の両方で判定する（コンテンツで消えないように） */
+    function updateHeaderLogo() {
+      if (!header) return;
+      var heroInView = window.scrollY < hero.offsetHeight * 0.5;
+      var p = activeTL ? activeTL.progress() : 0;
+      header.classList.toggle('is-logo-hidden', heroInView && p < HERO_SETTINGS.headerLogoAt);
+    }
+
     /* スクロール量には結びつけない（scrub なし）。
        停止したタイムラインを initHeroGate が一定尺で直接再生する。
-       ＝アニメ中はスクロールを動かさないので、いちばん滑らか。
-       ヘッダーのロゴは進捗で受け渡す：頭では大きな Hero ロゴが主役なので隠し、
-       reveal が進んだら（コンセプト段では）ヘッダーのロゴを出す */
+       ＝アニメ中はスクロールを動かさないので、いちばん滑らか。 */
     function timeline() {
       return gsap.timeline({
         paused: true,
-        onUpdate: function () {
-          if (header) {
-            header.classList.toggle('is-logo-hidden', this.progress() < HERO_SETTINGS.headerLogoAt);
-          }
-        }
+        onUpdate: updateHeaderLogo
       });
     }
 
@@ -642,15 +646,19 @@
 
       // ロック中だけ頂上へ固定（アニメ中は一切スクロールさせない）。
       // 送り出し後はロックを解いたまま普通にスクロールできる。
-      // 頂上（scrollY≈0）まで戻ってきたら、Hero の見た目だけ頭出しへ戻す
-      // （再ロックも scrollTo もしない＝勝手に top へ吸い寄せない）。
+      // Hero が画面外まで送られている「見えない間」に頭出しへ戻しておく。
+      // こうすると、次に上へ戻ってきたとき head がスナップせず、
+      // 普通のセクションのように自然にスクロールインして現れる。
       window.addEventListener('scroll', function () {
         if (locked) {
           if (window.scrollY !== 0) window.scrollTo(0, 0);
-        } else if (window.scrollY <= 2 && activeTL && activeTL.progress() > 0) {
+          return;
+        }
+        if (window.scrollY > hero.offsetHeight && activeTL && activeTL.progress() > 0) {
           stageIdx = 0;
           activeTL.progress(0);
         }
+        updateHeaderLogo();
       }, { passive: true });
 
       // リサイズで寸法が変わったら測り直す
