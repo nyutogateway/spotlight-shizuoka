@@ -1393,10 +1393,11 @@ main:has(#about-station) .p-station {
 .p-voice {
   display: flex;
   align-items: stretch;
-  height: calc(100svh - var(--header-height));
-  padding-block: 4vh;
+  /* 1グループ＝ほぼ1画面。中身が入りきらないときは切らずに少し伸ばす
+     （スクロールスナップは頭で揃うので、続きはそのまま読める） */
+  min-height: calc(100svh - var(--header-height));
+  padding-block: 6vh;
   border-top: 1px solid var(--color-line-strong);
-  overflow: hidden;
 }
 
 .p-voice__inner {
@@ -1530,7 +1531,7 @@ main:has(#about-station) .p-station {
 }
 
 .p-voice__lead .c-card {
-  width: min(34svh, 33vw);
+  width: min(32svh, 32vw);
 }
 
 .p-voice__body.is-swapping {

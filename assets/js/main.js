@@ -268,12 +268,6 @@
     head.appendChild(label);
     head.appendChild(el('h2', 'p-voice__title', 'VOICE'));
 
-    var note = el('div', 'p-voice__note');
-    note.appendChild(el('p', 'p-voice__range', 'NEXT'));
-    note.appendChild(el('p', 'p-voice__text',
-      '次に登場するリーダーを準備しています。'));
-    head.appendChild(note);
-
     var body = el('div', 'p-voice__body');
     var placeholder = el('div', 'p-voice__coming');
     placeholder.appendChild(el('p', 'p-voice__coming-label', 'COMING SOON'));
@@ -306,17 +300,7 @@
       head.appendChild(label);
       head.appendChild(el('h2', 'p-voice__title', 'VOICE'));
 
-      /* 見出し脇の短い説明。PC では左の列に置いて sticky にする */
       var members = group.entries.slice();
-      var note = el('div', 'p-voice__note');
-      var first = members[0];
-      var last = members[members.length - 1];
-      if (first && last && first.no && last.no) {
-        note.appendChild(el('p', 'p-voice__range', first.no + ' — ' + last.no));
-      }
-      note.appendChild(el('p', 'p-voice__text',
-        '静岡で挑戦を続ける人と企業の声を、5人ずつ紹介します。'));
-      head.appendChild(note);
 
       var nav = el('div', 'p-voice__nav');
       var prev = el('button', 'p-voice__arrow p-voice__arrow--prev');
