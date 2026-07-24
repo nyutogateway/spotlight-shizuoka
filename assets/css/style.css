@@ -231,10 +231,27 @@ body {
    -------------------------------------------------------------- */
 /* ヘッダーと同じくロゴを読ませるためネイビー地にする */
 .l-footer {
+  position: relative;
   margin-top: 72px;
   padding-block: 56px 36px;
   background-color: var(--color-navy);
   color: var(--color-white);
+}
+
+/* 放送局セクションとフッターは同じネイビーで地続きなので、
+   境目に一本、細い光の線を入れて面を分ける */
+.l-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.22) 28%,
+    rgba(255, 255, 255, 0.22) 72%,
+    transparent
+  );
 }
 
 /* 放送局セクション（同じネイビー地）の直後は、隙間を作らず
@@ -259,12 +276,22 @@ main:has(#about-station) .p-station {
   text-align: center;
 }
 
+/* 放送局は白の版に載せたロゴで置く（ヘッダー・ABOUT と同じ扱い） */
 .l-footer__station a {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  color: var(--color-lime);
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  background-color: var(--color-white);
+  transition: opacity var(--dur) var(--ease);
+}
+
+.l-footer__station a:hover {
+  opacity: .78;
+}
+
+.l-footer__station img {
+  width: auto;
+  height: 24px;
 }
 
 .l-footer__logo img {
@@ -716,7 +743,6 @@ main:has(#about-station) .p-station {
 .c-card__logo {
   display: grid;
   place-items: center;
-  padding: 9% 7%;
   background-color: var(--color-white);
   box-shadow: inset 0 0 0 1px var(--color-line);
 }
