@@ -512,162 +512,51 @@
     /* 風景とコンセプト文が出そろう位置。各ブランチが実際の値を入れる。
        ここは見せ場なので、途中の半端な状態で止めない */
     var conceptStop = 1;
-    // ゲートが直接ドライブする、いま有効なタイムライン
     var activeTL = null;
     var header = document.getElementById('js-header');
 
-    /* ヘッダーのロゴの出し分け。Hero が主役で見えている頭のうちだけ隠し、
-       コンセプト段（進捗が進んだ）やコンテンツ側では出す。
-       ＝スクロール位置と進捗の両方で判定する（コンテンツで消えないように） */
+    /* ヘッダーのロゴの出し分け。頭（進捗が浅い）のうちは大きな Hero ロゴが
+       主役なので隠し、reveal が進んだコンセプト段やコンテンツ側では出す。
+       scrub なので進捗はスクロールに追従する＝進捗だけで判定できる */
     function updateHeaderLogo() {
       if (!header) return;
-      var heroInView = window.scrollY < hero.offsetHeight * 0.5;
       var p = activeTL ? activeTL.progress() : 0;
-      header.classList.toggle('is-logo-hidden', heroInView && p < HERO_SETTINGS.headerLogoAt);
+      header.classList.toggle('is-logo-hidden', p < HERO_SETTINGS.headerLogoAt);
     }
 
-    /* スクロール量には結びつけない（scrub なし）。
-       停止したタイムラインを initHeroGate が一定尺で直接再生する。
-       ＝アニメ中はスクロールを動かさないので、いちばん滑らか。 */
+    /* スクロールに滑らかに追従（scrub）して“流れる”ように再生する。
+       止め位置（0 / コンセプト出そろい / 送り出し）へ snap で吸着させ、
+       中途半端な位置で止まらない・大きくは飛び越えないようにする */
     function timeline() {
       return gsap.timeline({
-        paused: true,
-        onUpdate: updateHeaderLogo
+        scrollTrigger: {
+          trigger: hero,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.8,                 // 追従の平滑化。大きいほど“ぬめっと”流れる
+          invalidateOnRefresh: true,
+          onUpdate: updateHeaderLogo,
+          snap: {
+            snapTo: function (value) {
+              var pts = [0, conceptStop, 1];
+              var best = pts[0], bd = Infinity;
+              for (var i = 0; i < pts.length; i++) {
+                var d = Math.abs(pts[i] - value);
+                if (d < bd) { bd = d; best = pts[i]; }
+              }
+              return best;
+            },
+            duration: { min: 0.25, max: 0.7 },
+            ease: 'power1.inOut',
+            delay: 0.05
+          }
+        }
       });
     }
 
     // 頭出しの状態：Hero の大きなロゴが主役なので、ヘッダー側は隠しておく
     if (header) header.classList.add('is-logo-hidden');
 
-    /* Hero のゲート。
-       Hero にいる間はネイティブのスクロールを完全にロックし（＝アニメ中は一切
-       スクロールしない）、ホイール／スワイプ／キーの1操作ごとに、停止した
-       タイムラインを「止め位置」まで一定の尺で“直接”再生する。
-       スクロール量に一切結びつけないので、速さに依存せず、飛び越えもせず、いちばん滑らか。
-       止め位置（タイムライン進捗）：0（頭出し）/ conceptStop（コンセプト出そろい）/ 1（送り出し）。
-       送り出し済み（最終段）で さらに下 → ロック解除してコンテンツへ。 */
-    function initHeroGate() {
-      if (prefersReducedMotion) return;
-      if (typeof gsap === 'undefined' || typeof gsap.to !== 'function') return;
-
-      var animating = false;
-      var cooldownUntil = 0;
-      var stageIdx = 0;
-      var locked = true;                 // Hero 内：スクロール禁止＋直接再生
-
-      function stops() { return [0, conceptStop, 1]; }   // タイムライン進捗の止め位置
-
-      // 現在の進捗から止め位置 i まで、距離に応じた一定の尺で“直接”再生する
-      function playToStage(i) {
-        var ps = stops();
-        i = Math.max(0, Math.min(ps.length - 1, i));
-        stageIdx = i;
-        if (!activeTL) return;
-        var fromP = activeTL.progress();
-        var toP = ps[i];
-        var dist = Math.abs(toP - fromP);
-        if (dist < 0.002) return;
-        animating = true;
-        activeTL.tweenTo(toP * activeTL.duration(), {
-          duration: Math.min(3.0, Math.max(0.7, 3.2 * dist)),
-          ease: 'sine.inOut',            // 緩やかなS字。加速感は最小
-          overwrite: true,
-          onComplete: function () { animating = false; cooldownUntil = performance.now() + 160; }
-        });
-      }
-
-      // 1操作を処理。true=消費した（preventDefault する）
-      function step(dir) {
-        if (animating || performance.now() < cooldownUntil) return true;
-        if (dir > 0) {
-          if (stageIdx >= stops().length - 1) { locked = false; return false; } // 解放
-          playToStage(stageIdx + 1);
-          return true;
-        }
-        if (stageIdx <= 0) return false;   // 先頭より上はない
-        playToStage(stageIdx - 1);
-        return true;
-      }
-
-      // 頂上（scrollY≈0）で「下」入力が来たら、Hero を頭から再生し直す（再ロック）。
-      // ただし Hero が頭出し(progress 0)のときだけ。送り出し直後（progress 1）は
-      // まだ頂上に居るので、ここで再生し直すと下（コンテンツ）へ行けなくなる。
-      function reengageIfTop(dir) {
-        if (locked || dir <= 0 || window.scrollY > 2) return false;
-        if (!activeTL || activeTL.progress() > 0.01) return false;  // 頭出しのときだけ
-        locked = true;
-        animating = false;
-        cooldownUntil = 0;
-        stageIdx = 0;
-        if (activeTL) activeTL.progress(0);
-        step(1);                           // 最初の段へ再生
-        return true;
-      }
-
-      window.addEventListener('wheel', function (e) {
-        var dir = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0);
-        if (!locked) {                     // コンテンツ側：通常スクロール
-          if (reengageIfTop(dir)) e.preventDefault();  // 頂上で下 → 再生し直す
-          return;
-        }
-        if (dir) step(dir);
-        if (locked) e.preventDefault();    // 解放した瞬間の1操作だけは通す
-      }, { passive: false });
-
-      var startY = null;
-      window.addEventListener('touchstart', function (e) {
-        startY = e.touches ? e.touches[0].clientY : null;
-      }, { passive: true });
-      window.addEventListener('touchmove', function (e) {
-        if (startY == null) return;
-        var y = e.touches[0].clientY;
-        var dy = startY - y;               // 指を上へ（＝下スクロール）→ dy>0
-        if (!locked) {                     // 頂上で下スワイプ → 再生し直す
-          if (dy > 6 && reengageIfTop(1)) { startY = y; e.preventDefault(); }
-          return;
-        }
-        if (Math.abs(dy) < 8) { e.preventDefault(); return; }
-        step(dy > 0 ? 1 : -1);
-        startY = y;
-        if (locked) e.preventDefault();
-      }, { passive: false });
-
-      window.addEventListener('keydown', function (e) {
-        var down = (e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Spacebar');
-        var up = (e.key === 'PageUp' || e.key === 'ArrowUp');
-        if (!locked) {                     // 頂上で下キー → 再生し直す
-          if (down && reengageIfTop(1)) e.preventDefault();
-          return;
-        }
-        if (e.key === 'Home') { e.preventDefault(); playToStage(0); return; }
-        if (e.key === 'End') { e.preventDefault(); playToStage(stops().length - 1); return; }
-        if (!down && !up) return;
-        step(down ? 1 : -1);
-        if (locked) e.preventDefault();
-      });
-
-      // ロック中だけ頂上へ固定（アニメ中は一切スクロールさせない）。
-      // 送り出し後はロックを解いたまま普通にスクロールできる。
-      // Hero が画面外まで送られている「見えない間」に頭出しへ戻しておく。
-      // こうすると、次に上へ戻ってきたとき head がスナップせず、
-      // 普通のセクションのように自然にスクロールインして現れる。
-      window.addEventListener('scroll', function () {
-        if (locked) {
-          if (window.scrollY !== 0) window.scrollTo(0, 0);
-          return;
-        }
-        if (window.scrollY > hero.offsetHeight && activeTL && activeTL.progress() > 0) {
-          stageIdx = 0;
-          activeTL.progress(0);
-        }
-        updateHeaderLogo();
-      }, { passive: true });
-
-      // リサイズで寸法が変わったら測り直す
-      window.addEventListener('resize', function () {
-        if (activeTL) { activeTL.invalidate(); activeTL.progress(activeTL.progress()); }
-      }, { passive: true });
-    }
 
     /* 読み込み直後の登場。スクロール演出とぶつからないよう、
        timeline が触らない子要素だけを動かす */
@@ -819,9 +708,6 @@
       conceptStop = 1.54 / tlNarrow.duration();
       activeTL = tlNarrow;
     });
-
-    // Hero を飛び越えさせないゲートを有効化（conceptStop は各ブランチが設定済み）
-    initHeroGate();
 
     // 画像やフォントが揃ってから測り直す
     window.addEventListener('load', function () { ScrollTrigger.refresh(); });
