@@ -545,6 +545,9 @@
        ここは見せ場なので、途中の半端な状態で止めない */
     var conceptStop = 1;
 
+    // 直近のスクロール方向（1=下 / -1=上）。snap の送り先を決めるのに使う
+    var heroDir = 1;
+
     function timeline() {
       return gsap.timeline({
         scrollTrigger: {
@@ -553,18 +556,29 @@
           end: 'bottom bottom',
           scrub: HERO_SETTINGS.scrub,
           invalidateOnRefresh: true,
+          onUpdate: function (self) { heroDir = self.direction; },
+          /* スクロールの「速さ」に依存させず、1本の滑らかなアニメとして再生する。
+             止め位置は 3つだけ：頭出し(0) / コンセプトが出そろう(conceptStop) / 送り出し(1)。
+             少しでもスクロールしたら、その方向の次の止め位置まで一定の尺で再生し切る。
+             duration を固定気味にすることで、速く振っても遅く振っても同じ速度で動く */
           snap: {
             snapTo: function (value) {
-              // 終盤で手を離したときだけ、出そろう位置へ送る。
-              // そこを過ぎたら次のセクションへ抜けるので引き戻さない
-              if (value > HERO_SETTINGS.conceptSnapFrom && value < conceptStop + .02) {
-                return conceptStop;
+              var pts = [0, conceptStop, 1];
+              if (heroDir >= 0) {
+                for (var i = 0; i < pts.length; i++) {
+                  if (pts[i] > value + .004) return pts[i];
+                }
+                return pts[pts.length - 1];
               }
-              return value;
+              for (var j = pts.length - 1; j >= 0; j--) {
+                if (pts[j] < value - .004) return pts[j];
+              }
+              return pts[0];
             },
-            duration: { min: .25, max: .7 },
-            delay: .06,
-            ease: 'power2.inOut'
+            duration: { min: 1.5, max: 2.4 },  // 一定尺＝一定速度に近づける
+            delay: .02,                        // スクロール直後に再生を始める
+            ease: 'power1.inOut',
+            inertia: false
           }
         }
       });
