@@ -71,9 +71,9 @@
      1-2. ハンバーガーメニュー
      ------------------------------------------------------------------ */
   var SITE_LINKS = [
-    ['INDEX', 'index.html'],
+    ['TOP', 'index.html'],
     ['CONTACT', 'contact.html'],
-    ['PRIVACY', 'privacy.html']
+    ['POLICY', 'privacy.html']
   ];
 
   function buildHamburger() {
