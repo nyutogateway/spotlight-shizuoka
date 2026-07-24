@@ -420,7 +420,7 @@
      ・将来 WordPress へ移すときはこの関数ごと差し替えられるようにしてある。
      ------------------------------------------------------------------ */
   var HERO_SETTINGS = {
-    scrub: 0.4,   // ゲートが送るスクロールへ素直に追従させる（過剰な遅延を避ける）
+    scrub: 1.0,   // 平滑化。ゲートは等速(linear)で送り、ここで滑らかな立ち上がり/収まりを作る
     imageScaleStart: 1.24,   // CSS の --opening-image-scale と揃える
     imageScaleMid: 1.12,
     imageScaleEnd: 1,
@@ -600,7 +600,8 @@
         gsap.to(proxy, {
           y: s[i],
           duration: dur,
-          ease: 'power2.inOut',
+          // 等速で送る（加速なし）。滑らかな立ち上がり・収まりは scrub 側が作る
+          ease: 'none',
           overwrite: true,
           onUpdate: function () { window.scrollTo(0, proxy.y); },
           onComplete: function () { animating = false; cooldownUntil = performance.now() + 180; }
