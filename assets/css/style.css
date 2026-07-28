@@ -188,32 +188,6 @@ body {
   gap: 18px;
 }
 
-/* 放送局はロゴで出す。濃色地では読めない素材なので白の版に載せる
-   （ABOUT SBS RADIO と同じ扱い） */
-.l-header__station a {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 12px;
-  background-color: var(--color-white);
-  transition: opacity var(--dur) var(--ease);
-}
-
-.l-header__station a:hover {
-  opacity: .78;
-}
-
-.l-header__station img {
-  width: auto;
-  height: 44px;
-}
-
-@media (max-width: 900px) {
-  /* 狭い幅ではドロワーに寄せる */
-  .l-header__station {
-    display: none;
-  }
-}
-
 .l-header__logo img {
   width: auto;
   height: 106px;
@@ -252,21 +226,6 @@ body {
     rgba(255, 255, 255, 0.22) 72%,
     transparent
   );
-}
-
-/* 放送局セクション（同じネイビー地）の直後は、隙間を作らず
-   一枚の面としてフッターへつなぐ。
-   :has 非対応ブラウザでは放送局側の負マージンで詰める */
-.p-station {
-  margin-bottom: -72px;
-}
-
-main:has(#about-station) + .l-footer {
-  margin-top: 0;
-}
-
-main:has(#about-station) .p-station {
-  margin-bottom: 0;
 }
 
 .l-footer__inner {
@@ -701,9 +660,9 @@ main:has(#about-station) .p-station {
 
 /* --------------------------------------------------------------
    Component / card（VOICE のカード）
-   写真と企業ロゴを重ねて置き、ホバーで入れ替える。
-   ・通常のカード … 既定はロゴ、ホバーで顔
-   ・各グループの先頭（--lead）… 既定は顔、ホバーでロゴ
+   見せるのは人。企業ロゴは出さない。
+   ・各グループの先頭（--lead）… 大きい枠。はじめからカラー
+   ・レールのカード … 白黒で置いて、ホバーで色が戻る
    -------------------------------------------------------------- */
 /* 先頭カードはリストの外に置くため、行頭記号を明示的に消す */
 .c-card {
@@ -721,65 +680,36 @@ main:has(#about-station) .p-station {
   background-color: var(--color-white);
 }
 
-.c-card__photo,
-.c-card__logo {
+.c-card__photo {
   position: absolute;
   inset: 0;
-  transition: opacity .55s var(--ease);
+  transition: transform .55s var(--ease);
 }
 
 /* 枠より少し高く取り、枠の中だけで上下させる（--parallax-shift は
-   main.js が親セクションへ配る。JS が動かなければ既定値のまま止まる） */
+   main.js が親セクションへ配る。JS が動かなければ既定値のまま止まる）。
+   transform は視差が使うので、色の出し入れは filter 側で行う */
 .c-card__photo img {
   width: 100%;
   height: 112%;
   object-fit: cover;
   object-position: top;
   transform: translateY(var(--parallax-shift, -3%));
+  filter: grayscale(1) contrast(1.04);
+  transition: filter .55s var(--ease);
 }
 
-/* ロゴ面。素材ごとに地色が焼き込まれているので、
-   小さく・同じ光学サイズに揃えて「印」として見せる */
-.c-card__logo {
-  display: grid;
-  place-items: center;
-  background-color: var(--color-white);
-  box-shadow: inset 0 0 0 1px var(--color-line);
+/* 大きい枠ははじめからカラー。レールはホバー／フォーカスで色が戻る */
+.c-card--lead .c-card__photo img,
+.c-card__link:hover .c-card__photo img,
+.c-card__link:focus-visible .c-card__photo img {
+  filter: grayscale(0) contrast(1);
 }
 
-/* 素材ごとに縦横比も地色もばらつく。cover だと白地ロゴが上下で
-   切れてしまうので、contain でカード幅いっぱいまで拡大しつつ
-   ロゴ全体は必ず収める（余白は最小限、切れはゼロ） */
-.c-card__logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform .55s var(--ease);
-}
-
-.c-card__link:hover .c-card__logo img {
+.c-card__link:hover .c-card__photo,
+.c-card__link:focus-visible .c-card__photo {
   transform: scale(1.03);
 }
-
-/* 既定：通常カードはロゴ、先頭カードは顔 */
-.c-card__photo { opacity: 0; }
-.c-card__logo { opacity: 1; }
-
-.c-card--lead .c-card__photo { opacity: 1; }
-.c-card--lead .c-card__logo { opacity: 0; }
-
-/* ホバーで入れ替える */
-.c-card__link:hover .c-card__photo,
-.c-card__link:focus-visible .c-card__photo { opacity: 1; }
-
-.c-card__link:hover .c-card__logo,
-.c-card__link:focus-visible .c-card__logo { opacity: 0; }
-
-.c-card--lead .c-card__link:hover .c-card__photo,
-.c-card--lead .c-card__link:focus-visible .c-card__photo { opacity: 0; }
-
-.c-card--lead .c-card__link:hover .c-card__logo,
-.c-card--lead .c-card__link:focus-visible .c-card__logo { opacity: 1; }
 
 .c-card__more {
   position: absolute;
@@ -833,244 +763,10 @@ main:has(#about-station) .p-station {
 }
 
 /* --------------------------------------------------------------
-   Component / form（お問い合わせ。下層ページのトーンに合わせる）
-   -------------------------------------------------------------- */
-.c-form__row {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 26px;
-}
-
-.c-form__label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.c-form__req {
-  padding: 2px 8px;
-  background-color: var(--color-blue);
-  color: var(--color-white);
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .1em;
-}
-
-.c-form__input {
-  width: 100%;
-  padding: 13px 14px;
-  border: 1px solid var(--color-line-strong);
-  border-radius: 0;
-  background-color: var(--color-white);
-  color: inherit;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.7;
-  transition: border-color var(--dur) var(--ease);
-}
-
-.c-form__input:focus {
-  border-color: var(--color-blue);
-  outline: none;
-}
-
-.c-form__input--area {
-  resize: vertical;
-}
-
-.c-form__consent {
-  margin-top: 34px;
-  font-size: 13px;
-}
-
-.c-form__consent label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.c-form__consent input {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--color-blue);
-}
-
-.c-form__submit {
-  margin-top: 32px;
-}
-
-.c-form__submit button {
-  min-width: 220px;
-  padding: 16px 40px;
-  border: 0;
-  border-radius: 999px;
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  cursor: pointer;
-  transition: background-color var(--dur) var(--ease);
-}
-
-.c-form__submit button:hover {
-  background-color: var(--color-blue);
-}
-
-/* --------------------------------------------------------------
-   Component / hamburger（main.js がヘッダーに差し込む）
-   -------------------------------------------------------------- */
-.c-hamburger {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.c-hamburger__line {
-  display: block;
-  width: 38px;
-  height: 3px;
-  background-color: currentColor;
-  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
-}
-
-/* 3本のうち上下を交差させ、中央を消して × にする */
-.c-hamburger.is-active {
-  color: var(--color-white);
-}
-
-.c-hamburger.is-active .c-hamburger__line--top {
-  transform: translateY(12px) rotate(45deg);
-}
-
-.c-hamburger.is-active .c-hamburger__line--middle {
-  opacity: 0;
-}
-
-.c-hamburger.is-active .c-hamburger__line--bottom {
-  transform: translateY(-12px) rotate(-45deg);
-}
-
-/* --------------------------------------------------------------
-   Component / drawer（ハンバーガーで開くメニュー）
-   -------------------------------------------------------------- */
-.c-drawer {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  visibility: hidden;
-  opacity: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: calc(var(--header-height) + 56px) var(--container-pad) 80px;
-  background-color: var(--color-navy);
-  color: var(--color-white);
-  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
-}
-
-.c-drawer.is-open {
-  visibility: visible;
-  opacity: 1;
-}
-
-.c-drawer__inner {
-  max-width: var(--container-max);
-  margin-inline: auto;
-}
-
-.c-drawer__section + .c-drawer__section {
-  margin-top: 64px;
-  padding-top: 48px;
-  border-top: 1px solid rgba(255, 255, 255, .18);
-}
-
-.c-drawer__label {
-  margin-bottom: 24px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  color: var(--color-blue-light);
-}
-
-.c-drawer__menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 56px;
-}
-
-.c-drawer__menu a {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 54px);
-  font-weight: 800;
-  letter-spacing: -.02em;
-  line-height: 1.25;
-  transition: color var(--dur) var(--ease);
-}
-
-.c-drawer__menu a:hover {
-  color: var(--color-blue-light);
-}
-
-.c-drawer__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  column-gap: 44px;
-}
-
-.c-drawer__link {
-  display: block;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, .14);
-}
-
-.c-drawer__company {
-  display: block;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, .55);
-}
-
-.c-drawer__person {
-  display: block;
-  margin-top: 2px;
-  font-size: 16px;
-  font-weight: 700;
-  transition: color var(--dur) var(--ease);
-}
-
-.c-drawer__link:hover .c-drawer__person,
-.c-drawer__link:focus-visible .c-drawer__person {
-  color: var(--color-blue-light);
-}
-
-/* ドロワーを開いている間は背面を固定する */
-.is-drawer-open {
-  overflow: hidden;
-}
-
-/* --------------------------------------------------------------
    Project / opening hero（TOP）
-   深いネイビーの中に大きなロゴ。右下の切り抜きから静岡の風景が覗き、
-   スクロールでその奥へ入っていく。
+   夜明けの海。上はまだ夜のネイビー、水平線に曙光、下は暗い海。
+   その中に大きなロゴが立ち、灯台の光がゆっくり一周する。
+   右下の切り抜きから静岡の風景が覗き、スクロールでその奥へ入っていく。
 
    ・基準は「演出なしでも読める縦積み」。
    ・JS が使える環境（html.has-js）だけ sticky の演出用配置へ切り替える。
@@ -1082,13 +778,33 @@ main:has(#about-station) .p-station {
   --opening-scroll-length: 240svh;  /* Hero のスクロール距離。scrub で流れるように追従する */
   --opening-side: 7vw;              /* Hero の左右余白 */
   --opening-logo-width: min(52vw, 700px, 84svh);   /* 平たい画面では高さでも抑える */
-  --opening-window-width: min(30vw, 52svh);
+  --opening-window-width: min(25vw, 43svh);
   --opening-window-ratio: 1.31;      /* 静岡県の実際の縦横比。画面比で歪ませない */
   --opening-window-bleed-x: 4vw;    /* 右の余白 */
   --opening-window-bleed-y: 4svh;   /* 下の余白 */
   --opening-image-scale: 1.24;      /* 初期の拡大率。CSS と JS で揃える */
   --opening-image-veil: .06;        /* 写真に常時かけるネイビー。切り抜きの中は明るく保つ */
   --opening-overlay-opacity: .64;   /* 最終盤の覆い。JS の overlayOpacity と揃える */
+  --opening-horizon: 72%;           /* 水平線の高さ。空と海、曙光の中心をここで揃える */
+  --opening-onair-size: 200px;     /* 放送のお知らせの円の直径 */
+  --opening-veil: .22;              /* 写真全体にかける暗さ。ここ1つで明暗を調整する */
+  --opening-photo-horizon: 67.3%;   /* 写真の中で水平線がある高さ。写真を替えたら測り直す */
+  /* 写真をどこまで拡大して置くか。画面をどう覆うかと、
+     手前にどこまで砂浜を入れるかがこれで決まる */
+  --opening-scene-width: max(100vw, 205svh);
+  --opening-wave: 20px;             /* 照り返しの筋の周期。送る距離もこれと同じにする */
+  --opening-beam-turn: 16s;         /* 光が一周する時間。ロゴの明滅もこれに乗せる */
+  /* ランプから見たロゴの方角。画面比で 79〜86度に収まるので代表値を置く。
+     光の始まりをこの角度の 90度手前にしてあるので、
+     光は一周の 1/4（＝4秒）のところで必ずロゴを通る */
+  --opening-beam-aim: 84deg;
+  --opening-lighthouse-x: 13%;      /* 灯台の立ち位置。ロゴの左、空いている側に置く */
+  --opening-lighthouse-h: min(30svh, 270px);
+  --opening-lighthouse-ratio: .4167;/* 灯台SVGの viewBox 100/240 */
+  /* 光の軸＝灯台のランプ。SVG の上から 20%（＝足元から 80%）の位置にある。
+     灯台は水平線に足を置くので、そこから逆算する */
+  --opening-lamp-x: var(--opening-lighthouse-x);
+  --opening-lamp-y: calc(var(--opening-horizon) - var(--opening-lighthouse-h) * .80);
 }
 
 /* ---- 基準（演出なし）。上から順に読める縦積み ---- */
@@ -1146,7 +862,123 @@ main:has(#about-station) .p-station {
   will-change: transform;
 }
 
-/* SCROLL とネイビーの覆いは演出時にだけ出す */
+/* 放送のお知らせ。正円のシール。
+   外周を文字が回り、中心に放送局のロゴを置く。
+   円の上を光がゆっくり横切る（Hero の灯台の光に合わせた仕草）。
+   基準（演出なし）では縦積みの中にそのまま並ぶ */
+.opening-hero__onair {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--opening-onair-size);
+  aspect-ratio: 1;
+  margin: 6vh auto 0;
+  border: 1px solid rgba(227, 230, 72, .34);
+  border-radius: 50%;
+  background-color: rgba(9, 22, 38, .5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .09),
+    0 10px 30px rgba(4, 12, 22, .42);
+}
+
+/* 円の上を横切る光。丸みは親から継ぐ */
+.opening-hero__onair::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(105deg,
+    transparent 40%,
+    rgba(255, 255, 255, .16) 50%,
+    transparent 60%);
+  background-size: 240% 100%;
+  background-repeat: no-repeat;
+  animation: opening-onair-shine 7.5s ease-in-out infinite;
+}
+
+/* 走ったあとは間を置いてから次へ。ずっと光り続けさせない */
+@keyframes opening-onair-shine {
+  0%, 58% { background-position: -70% 0; }
+  100%    { background-position: 170% 0; }
+}
+
+/* 外周を回る文字。円そのものを回すので、文字は常に外を向いたまま巡る */
+.opening-hero__onair-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: opening-onair-spin 22s linear infinite;
+}
+
+@keyframes opening-onair-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.opening-hero__onair-ringtext {
+  font-family: var(--font-ui);
+  font-size: 8.6px;
+  font-weight: 700;
+  fill: var(--color-lime);
+}
+
+/* 中身。局名と本文を縦に積んで円の中心に置く */
+.opening-hero__onair-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+
+/* 放送局の名。円の主役なので大きく、字間を開いて印らしく */
+.opening-hero__onair-name {
+  font-family: var(--font-ui);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1;
+  color: var(--color-white);
+}
+
+/* 本文。局名と分ける細い罫を挟み、頭に放送中の灯を添える */
+.opening-hero__onair-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(227, 230, 72, .38);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1;
+  color: var(--color-white);
+}
+
+.opening-hero__onair-text::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-lime);
+  box-shadow: 0 0 11px rgba(227, 230, 72, .85);
+  animation: opening-onair-lamp 2.6s ease-in-out infinite;
+}
+
+@keyframes opening-onair-lamp {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .28; }
+}
+
+/* 写真とその覆い、海面、光の演出（灯台・光芒・粒子）、SCROLL、
+   ネイビーの覆いは演出時にだけ出す */
+.opening-hero__backdrop,
+.opening-hero__aura,
+.opening-hero__lighthouse,
 .opening-hero__scroll,
 .opening-hero__overlay {
   display: none;
@@ -1178,6 +1010,7 @@ main:has(#about-station) .p-station {
   margin-top: calc(var(--header-height) * -1);
 }
 
+/* 地。写真が読めなかったときの受け皿。上端はヘッダーと同じ色 */
 .has-js .opening-hero__sticky {
   position: sticky;
   top: 0;
@@ -1188,55 +1021,233 @@ main:has(#about-station) .p-station {
   background-color: var(--color-navy);
 }
 
-/* ネイビーの中へ差し込む光。ロゴの周りだけ空気を持たせる */
+/* Hero の地の入れ物。sticky と同じ大きさなので、中の要素の座標は変わらない。
+   締めで main.js がこれごと持ち上げ、下から次の誌面の地色を覗かせる。
+   写真と覆いをここに入れずに置くと、持ち上げた隙間から地色ではなく
+   夜明けの写真が覗いてしまう */
+.has-js .opening-hero__backdrop {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 夜明けの海の写真。空も海もこれ1枚で持つ。
+
+   cover で敷くと画面比によって写真の水平線が上下してしまい、
+   水平線に足を置いている灯台が浮いたり沈んだりする。
+   そこで写真の縦横比そのままの箱を作り、
+   「写真の水平線（--opening-photo-horizon）」が
+   「画面の水平線（--opening-horizon）」に必ず重なるよう置いている。
+   translateY を写真側の比率にしてあるので、どの画面比でもズレない。
+
+   幅は --opening-scene-width。画面を覆いきる大きさが要るのと、
+   手前に砂浜をどこまで入れるかがこの値で決まる */
+.has-js .opening-hero__scene {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: var(--opening-horizon);
+  width: var(--opening-scene-width);
+  aspect-ratio: 1000 / 667;
+  transform: translate(-50%, calc(var(--opening-photo-horizon) * -1));
+  pointer-events: none;
+  background-image: url("../img/hero-sky.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* 写真の上のネイビー。上端はヘッダーと同じ色そのもので始めて一枚の面につなぎ、
+   ロゴの背後と足元は白ヌキが読めるところまで沈める。
+
+   全体の暗さは最下段の一枚（--opening-veil）で決める。
+   その上の帯は上端が不透明なネイビーなので、いくら暗さを足しても
+   画面の上端だけはヘッダーと同じ色のまま残り、境目が出ない */
+.has-js .opening-hero__veil {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    /* ロゴの背後をもう一段落とす */
+    radial-gradient(62% 36% at 50% 44%,
+      rgba(11, 27, 46, .42), transparent 80%),
+    linear-gradient(to bottom,
+      var(--color-navy) 0,
+      rgba(11, 27, 46, .76) 11%,
+      rgba(11, 27, 46, .52) 30%,
+      rgba(11, 27, 46, .46) 50%,
+      rgba(11, 27, 46, .50) 66%,
+      rgba(9, 22, 38, .58) 80%,
+      rgba(5, 14, 26, .78) 100%),
+    /* 全体の暗さ。調整はこの1つの変数だけで足りる */
+    linear-gradient(
+      rgba(4, 12, 24, var(--opening-veil)),
+      rgba(4, 12, 24, var(--opening-veil)));
+}
+
+/* 海面に置くのは灯台の照り返しだけ。波は写真そのものに任せる。
+   水平線から手前へ倒した面に乗せ、perspective で奥ほど詰めて見せる。
+
+   perspective は重ね順の文脈を作るので、この中で screen は使えない。
+   色は素のアルファ合成で沈んだ海に乗る濃さに調整している */
+.has-js .opening-hero__sea {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--opening-horizon);
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 22vh;
+  perspective-origin: 50% 0;
+  /* 乗せるのは沖の水面だけ。写真では水平線(67.3%)から波打ち際(73.5%)までで、
+     海の帯のうち上から3割ほどしかない。そこを過ぎたら写真に任せて消す。
+     ここを広く取ると、照り返しが波打ち際や砂浜の上まで走ってしまう */
+  -webkit-mask-image: linear-gradient(to bottom,
+    #000 0, #000 15%, rgba(0, 0, 0, .45) 28%, transparent 42%);
+  mask-image: linear-gradient(to bottom,
+    #000 0, #000 15%, rgba(0, 0, 0, .45) 28%, transparent 42%);
+}
+
+/* 灯台の光が海面に落とす道。
+   水平線から手前へ倒した面に乗せているので、奥へ向かって自然にすぼまり、
+   粒も奥ほど詰まる（帯や階段には見えない）。
+   面の左端は画面の -80% にあるので、灯台（画面の 13%）は
+   面の幅 260% のうち (13 + 80) / 260 ≒ 35.8% にあたる。
+   送るのは筋の周期ちょうどぶんなので、いつまで回しても継ぎ目は出ない */
+.has-js .opening-hero__sea::after {
+  content: "";
+  position: absolute;
+  left: -80%;
+  right: -80%;
+  top: 0;
+  height: 300%;
+  transform-origin: 50% 0;
+  will-change: transform;
+  filter: blur(1.1px);
+  background-image:
+    repeating-linear-gradient(.4deg,
+      rgba(255, 241, 216, .95) 0 3px, transparent 3px var(--opening-wave)),
+    repeating-linear-gradient(-.62deg,
+      rgba(255, 226, 180, .65) 0 2px, transparent 2px var(--opening-wave));
+  -webkit-mask-image: radial-gradient(14% 48% at 35.8% 0,
+    #000, rgba(0, 0, 0, .64) 38%, transparent 78%);
+  mask-image: radial-gradient(14% 48% at 35.8% 0,
+    #000, rgba(0, 0, 0, .64) 38%, transparent 78%);
+  animation: opening-swell 9s linear infinite;
+}
+
+@keyframes opening-swell {
+  from { transform: rotateX(72deg) translateY(0); }
+  to   { transform: rotateX(72deg) translateY(var(--opening-wave)); }
+}
+
+
+
+/* ロゴの周りに残る空気。文字の足元だけ明るく持ち上げる。
+   --opening-light を使うのはここだけ（灯台とその光は引かせない）。
+   ロゴが退くのに合わせて引き、ヘッダーが地を取り戻すまでに消える */
 .has-js .opening-hero__sticky::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* ロゴと一緒に引かせる。ヘッダーが地を取り戻すまでに平らなネイビーへ戻す */
   opacity: var(--opening-light, 1);
-  background-image: radial-gradient(56% 46% at 50% 42%,
-    rgba(61, 176, 234, .13),
-    rgba(61, 176, 234, .05) 46%,
+  background-image: radial-gradient(52% 42% at 50% 42%,
+    rgba(255, 226, 190, .10),
+    rgba(61, 176, 234, .06) 44%,
     transparent 72%);
 }
 
-/* SPOTLIGHT の名にちなむ光の演出。ロゴへ差す光芒と、その中に舞う微光の粒子。
-   スクロールで --opening-light に乗せて、風景に切り替わるまでに静かに引く */
+/* SPOTLIGHT の名にちなむ光の演出。灯台から回る光芒と、その中に舞う微光の粒子。
+   灯台の本体と同じく、スクロールでは引かせない。光は灯り続け、
+   最後は風景の切り抜き（z2）が上から覆っていく。
+
+   z-index は auto のまま。数値を持たせると重ね順の文脈ができてしまい、
+   中の光が screen で夜明けの海と混ざらなくなる。
+   auto でも「地の上・窓(z2)やロゴ(z4)の下」の位置は変わらない */
 .has-js .opening-hero__aura {
+  display: block;
   position: absolute;
   inset: 0;
-  z-index: 1;                 /* 地の上・ロゴ(z4)や窓(z2)の下 */
+  z-index: auto;
   overflow: hidden;
   pointer-events: none;
-  opacity: var(--opening-light, 1);
 }
 
-/* ロゴのランプから下へ広がる光芒。上が細く、下へ open していく */
+/* 灯台の光。ランプ（--opening-lamp-x / -y）を軸に、
+   一本の帯が根元から扇形に開きながらゆっくり一周する。
+   反対側にも弱い帯を持たせて、二灯の灯台らしい回り方にする。
+
+   ・扇形は conic-gradient の角度で作る（clip-path も blur も使わない）
+   ・距離の減衰は mask の radial に任せる。遠くで消えるのは光として自然
+   ・回すのは transform だけなので、塗りは一度で済む */
 .has-js .opening-hero__beam {
   position: absolute;
-  top: -4%;
-  left: 50%;
-  width: min(52vw, 640px);
-  height: 62%;
-  transform: translateX(-50%);
-  clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%);
-  background-image: linear-gradient(to bottom,
-    rgba(227, 230, 72, .14),
-    rgba(61, 176, 234, .10) 32%,
-    rgba(61, 176, 234, .04) 62%,
-    transparent 90%);
-  filter: blur(16px);
+  top: var(--opening-lamp-y);
+  left: var(--opening-lamp-x);
+  width: 150vmax;
+  height: 150vmax;
+  transform: translate(-50%, -50%);
+  background-image: conic-gradient(from calc(var(--opening-beam-aim) - 90deg),
+    /* 芯と縁の差を小さく取る。ここを急にすると筋（レーザー）に見える */
+    rgba(255, 244, 220, .26)   0deg,   /* 主灯。芯は温かい光 */
+    rgba(212, 236, 252, .22)  14deg,
+    rgba(132, 204, 244, .15)  28deg,
+    rgba(61, 176, 234, .07)   42deg,
+    transparent               58deg,   /* 扇の縁。芯から左右に58度ひらく */
+    transparent              146deg,
+    rgba(61, 176, 234, .04)  162deg,   /* 副灯。主灯の裏に薄く */
+    rgba(168, 214, 244, .09) 180deg,
+    rgba(61, 176, 234, .04)  198deg,
+    transparent              214deg,
+    transparent              302deg,
+    rgba(61, 176, 234, .07)  318deg,
+    rgba(132, 204, 244, .15) 332deg,
+    rgba(212, 236, 252, .22) 346deg,
+    rgba(255, 244, 220, .26) 360deg);
+  /* 根元がいちばん濃く、画面の隅でちょうど消える */
+  -webkit-mask-image: radial-gradient(closest-side,
+    rgba(0, 0, 0, .9) 0, rgba(0, 0, 0, .82) 30%, rgba(0, 0, 0, .52) 60%,
+    rgba(0, 0, 0, .17) 86%, transparent 100%);
+  mask-image: radial-gradient(closest-side,
+    rgba(0, 0, 0, .9) 0, rgba(0, 0, 0, .82) 30%, rgba(0, 0, 0, .52) 60%,
+    rgba(0, 0, 0, .17) 86%, transparent 100%);
   mix-blend-mode: screen;
-  animation: opening-beam 6.5s ease-in-out infinite;
+  will-change: transform, opacity;
+  animation:
+    opening-lighthouse var(--opening-beam-turn) linear infinite,
+    opening-beam 6.5s ease-in-out infinite;
 }
 
-/* 光芒はごくわずかに息づく（規則的） */
+/* 光は一定の速さで回り続ける */
+@keyframes opening-lighthouse {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 光そのものはごくわずかに息づく（回転とは別の周期） */
 @keyframes opening-beam {
-  0%, 100% { opacity: .78; }
+  0%, 100% { opacity: .88; }
   50%      { opacity: 1; }
+}
+
+/* 灯台の本体。水平線に足を置いて立つ影。
+   塔も光もスクロールでは消さない。重ね順は auto のまま、
+   DOM で aura の後ろにあるので、塔は光芒の上に影として立つ */
+.has-js .opening-hero__lighthouse {
+  display: block;
+  position: absolute;
+  left: var(--opening-lighthouse-x);
+  bottom: calc(100% - var(--opening-horizon));
+  width: calc(var(--opening-lighthouse-h) * var(--opening-lighthouse-ratio));
+  height: var(--opening-lighthouse-h);
+  transform: translateX(-50%);
+  overflow: visible;
 }
 
 /* 光の中に舞う塵のような粒子。位置・大きさ・周期は span 側の変数で散らす */
@@ -1262,6 +1273,19 @@ main:has(#about-station) .p-station {
   100% { opacity: 0;    transform: translateY(var(--drift, -18px)) scale(.75); }
 }
 
+/* 演出時は左上。右上のハンバーガーと左右で対になり、
+   右は切り抜き1つに戻る。左は円（上）と灯台（下）で柱ができ、
+   左上 → 中央のロゴ → 右下の切り抜き、と対角に視線が流れる。
+   高さは右上のハンバーガー（56px角）と上端を揃える */
+.has-js .opening-hero__onair {
+  position: absolute;
+  top: calc((var(--header-height) - 56px) / 2);
+  left: var(--opening-side);
+  right: auto;
+  z-index: 4;
+  margin: 0;
+}
+
 /* ロゴは Hero の主役。ヘッダー内の小さなロゴとは役割を分ける */
 /* left:50% の絶対配置だと収縮幅が親の半分に制限されるので、
    枠側に幅を持たせて画像はそれに合わせる */
@@ -1277,8 +1301,24 @@ main:has(#about-station) .p-station {
   transform: translate(-50%, -50%);
 }
 
+/* 回ってきた光がロゴを照らす。
+   光は --opening-beam-aim の 90度手前から回りはじめるので、
+   一周（--opening-beam-turn）の 25% でロゴを通る。扇の幅が ±54度、
+   つまり一周の ±15% ぶんなので、10〜40% を明るく起きる山にしてある。
+   75% は主灯の裏側（副灯）が通るところ。弱く一度だけ照らす。
+   どちらのアニメーションもページの読み込みで一緒に始まるので位相はずれない */
 .has-js .opening-hero__logo img {
+  filter: brightness(.84) saturate(.94);
+  animation: opening-logo-lit var(--opening-beam-turn) ease-in-out infinite;
   width: 100%;
+}
+
+@keyframes opening-logo-lit {
+  0%,   10%  { filter: brightness(.84) saturate(.94); }
+  25%        { filter: brightness(1.26) saturate(1.08); }
+  40%,  66%  { filter: brightness(.84) saturate(.94); }
+  75%        { filter: brightness(1) saturate(1); }
+  84%, 100%  { filter: brightness(.84) saturate(.94); }
 }
 
 /* 右下に少し余白を残して置く。形は静岡県の輪郭 */
@@ -1353,7 +1393,20 @@ main:has(#about-station) .p-station {
   background: none;
 }
 
-.opening-hero.is-static .opening-hero__sticky::before {
+.opening-hero.is-static .opening-hero__sticky::before,
+.opening-hero.is-static .opening-hero__logo img {
+  filter: none;
+  animation: none;
+}
+
+.opening-hero.is-static .opening-hero__onair {
+  position: static;
+  margin: 6vh auto 0;
+}
+
+.opening-hero.is-static .opening-hero__backdrop,
+.opening-hero.is-static .opening-hero__lighthouse,
+.opening-hero.is-static .opening-hero__aura {
   display: none;
 }
 
@@ -1402,7 +1455,20 @@ main:has(#about-station) .p-station {
     background: none;
   }
 
-  .has-js .opening-hero__sticky::before {
+  .has-js .opening-hero__sticky::before,
+  .has-js .opening-hero__logo img {
+    filter: none;
+    animation: none;
+  }
+
+  .has-js .opening-hero__onair {
+    position: static;
+    margin: 6vh auto 0;
+  }
+
+  .has-js .opening-hero__backdrop,
+  .has-js .opening-hero__lighthouse,
+  .has-js .opening-hero__aura {
     display: none;
   }
 
@@ -1443,9 +1509,20 @@ main:has(#about-station) .p-station {
     --opening-scroll-length: 190svh;
     --opening-side: var(--container-pad);
     --opening-logo-width: min(88vw, 440px, 50svh);
-    --opening-window-width: min(52vw, 30svh);
+    --opening-window-width: min(44vw, 25svh);
     --opening-window-bleed-x: 5vw;
     --opening-window-bleed-y: 4svh;
+    /* 狭い画面では灯台を小さくして、ロゴの下に収める */
+    --opening-horizon: 74%;
+    --opening-lighthouse-x: 16%;
+    --opening-lighthouse-h: min(22svh, 170px);
+    /* 縦長の画面は横位置の写真を大きく拡大しないと覆えない。
+       水平線を合わせたまま覆いきる最小限まで落として、粗さを抑える */
+    --opening-onair-size: 110px;
+    --opening-scene-width: max(100vw, 180svh);
+    /* 灯台もロゴも位置が変わるので、光がロゴを向く角度も取り直す
+       （狭い画面では 36〜55度。代表値） */
+    --opening-beam-aim: 44deg;
   }
 
   /* 狭い画面では中央のまま少し上へ寄せ、下の切り抜きと重ならないようにする */
@@ -1458,6 +1535,37 @@ main:has(#about-station) .p-station {
   .has-js .opening-hero__scroll {
     bottom: 3vh;
   }
+
+  /* 狭い画面でも左上。ハンバーガーと上端を揃えるのは共通指定に任せる */
+  .has-js .opening-hero__onair {
+    left: var(--container-pad);
+    right: auto;
+  }
+
+  .opening-hero__onair-ringtext {
+    font-size: 8px;
+  }
+
+  .opening-hero__onair-core {
+    gap: 5px;
+  }
+
+  .opening-hero__onair-name {
+    font-size: 12px;
+    letter-spacing: .06em;
+  }
+
+  .opening-hero__onair-text {
+    gap: 4px;
+    padding-top: 5px;
+    font-size: 9.5px;
+  }
+
+  .opening-hero__onair-text::before {
+    width: 5px;
+    height: 5px;
+  }
+
 
   .has-js .opening-hero__concept {
     width: calc(100% - var(--container-pad) * 2);
@@ -1602,7 +1710,7 @@ main:has(#about-station) .p-station {
   min-height: 0;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 40px;
+  gap: 32px;
   align-items: start;
 }
 
@@ -1617,8 +1725,10 @@ main:has(#about-station) .p-station {
   aspect-ratio: 3 / 4;
 }
 
+/* 画面が低いときは高さ、狭いときは幅で頭打ちにする。
+   狭いときに 32vw のままだと、右のレールに残す幅がなくなる */
 .p-voice__lead .c-card {
-  width: min(32svh, 32vw);
+  width: min(32svh, 26vw);
 }
 
 .p-voice__body.is-swapping {
@@ -1637,22 +1747,22 @@ main:has(#about-station) .p-station {
 .p-voice__cards {
   display: flex;
   align-items: start;
-  gap: 20px;
+  gap: 18px;
   width: 100%;
 }
 
 .p-voice__cards > .c-card {
   flex: 1 1 0;
   min-width: 0;
-  max-width: min(23svh, 23vw);
+  max-width: min(28svh, 28vw);
 }
 
-/* レールのカードは幅が狭いので、印も小さくする */
+/* レールのカードは大きい枠より狭いので、印も一段小さくする */
 .p-voice__cards .c-card__more {
-  right: 8px;
-  bottom: 8px;
-  padding: 4px 8px;
-  font-size: 8px;
+  right: 9px;
+  bottom: 9px;
+  padding: 4px 9px;
+  font-size: 9px;
   letter-spacing: .08em;
 }
 
@@ -1709,8 +1819,7 @@ main:has(#about-station) .p-station {
     scroll-snap-align: start;
   }
 
-  .p-voice,
-  .p-station {
+  .p-voice {
     scroll-snap-align: start;
     /* 勢いよく振っても1つずつ止める */
     scroll-snap-stop: always;
@@ -1739,10 +1848,12 @@ main:has(#about-station) .p-station {
     overflow: visible;
   }
 
+  /* 見出しの列と溝で横幅の 1/4 近くを使ってしまうと、右のカードが
+     読めない大きさになる。見出しは必要なぶんだけに抑えて残りを渡す */
   .p-voice__inner {
     display: grid;
-    grid-template-columns: minmax(190px, 19%) 1fr;
-    gap: 0 5%;
+    grid-template-columns: minmax(160px, 17%) 1fr;
+    gap: 0 3.5%;
     align-items: start;
     height: 100%;
   }
@@ -1768,6 +1879,21 @@ main:has(#about-station) .p-station {
   }
 }
 
+/* 横1列に入れられる枚数は画面幅で決まる。詰め込むと1枚が読めなく
+   なるので、枚数のほうを落として1枚の大きさを保つ。
+   出ていない人も送りボタンと自動送りで必ず回ってくる */
+@media (min-width: 901px) and (max-width: 1179px) {
+  .p-voice__cards > .c-card:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@media (min-width: 1180px) and (max-width: 1399px) {
+  .p-voice__cards > .c-card:nth-child(n + 4) {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   /* 縦に積むので1画面固定は外す */
   .p-voice {
@@ -1784,14 +1910,20 @@ main:has(#about-station) .p-station {
   .p-voice__lead,
   .p-voice--flip .p-voice__lead {
     order: 0;
-    max-width: 320px;
+    max-width: 420px;
+  }
+
+  /* 縦積みでは幅の頭打ち（26vw）が効きすぎて、下のレールより
+     小さくなってしまう。先頭は枠いっぱいに使って一番大きく保つ */
+  .p-voice__lead .c-card {
+    width: 100%;
   }
 
   .p-voice--flip .p-voice__rail {
     order: 0;
   }
 
-  /* 狭い画面は横1列だと小さくなりすぎるので2列で折り返す */
+  /* 横1列だと小さくなりすぎるので折り返す */
   .p-voice__cards {
     flex-wrap: wrap;
     gap: 16px;
@@ -1802,8 +1934,23 @@ main:has(#about-station) .p-station {
   }
 
   .p-voice__cards > .c-card {
-    flex: 0 0 calc((100% - 16px) / 2);
+    flex: 0 0 calc((100% - 32px) / 3);
     max-width: none;
+  }
+}
+
+/* タブレット幅は3枚を1列に。4枚目が1枚だけ次の行に残ると
+   間延びするので出さない（送りで回ってくる） */
+@media (min-width: 561px) and (max-width: 900px) {
+  .p-voice__cards > .c-card:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+/* ここから下は3列だと1枚が小さすぎるので2列2段に戻す */
+@media (max-width: 560px) {
+  .p-voice__cards > .c-card {
+    flex: 0 0 calc((100% - 16px) / 2);
   }
 }
 
@@ -1848,168 +1995,6 @@ main:has(#about-station) .p-station {
 @media (max-width: 900px) {
   .p-voice__coming {
     min-height: 200px;
-  }
-}
-
-/* --------------------------------------------------------------
-   Project / station（運営する放送局の紹介。シリーズ共通の枠）
-   静岡の風景を暗く敷き、中央寄せの縦積みで落ち着いて見せる
-   -------------------------------------------------------------- */
-.p-station {
-  position: relative;
-  overflow: hidden;
-  /* ヘッダー込みで1画面（100svh）。ヘッダーが上に重なる分だけ上に余白を足し、
-     見える範囲で内容を縦中央に置く。下はフッターへそのままつなぐ */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100svh;
-  margin-top: 0;
-  padding-block: calc(var(--header-height) + 5vh) 12vh;
-  /* 地は深いネイビー。中央に光を溜めて暗くなりすぎないようにする（青＋ライム）。
-     音の波形は別のインラインSVG(.p-station__wave)で線そのものを動かす */
-  background-color: var(--color-navy);
-  background-image:
-    radial-gradient(64% 56% at 50% 48%,
-      rgba(61, 176, 234, .20),
-      transparent 70%),
-    radial-gradient(40% 34% at 50% 48%,
-      rgba(227, 230, 72, .10),
-      transparent 72%);
-  color: var(--color-white);
-}
-
-/* 音の波形。線そのものが d のモーフィングでうねる（横スライドではない）。
-   面いっぱいに敷いて、内容は z-index で上に置く。preserveAspectRatio=none で
-   セクション幅に引き伸ばし、stroke は non-scaling で一定の細さを保つ */
-.p-station__wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  height: min(46vh, 340px);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.p-station__wave-line {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.p-station__wave-line--1 { stroke: #E3E648; stroke-width: 2.2; opacity: .55; }
-.p-station__wave-line--2 { stroke: #3DB0EA; stroke-width: 1.6; opacity: .30; }
-.p-station__wave-line--3 { stroke: #FFFFFF; stroke-width: 1.2; opacity: .16; }
-.p-station__wave-line--4 { stroke: #3DB0EA; stroke-width: 1.0; opacity: .14; }
-
-/* 面の上端を締める細い光の線（Hero のライムに合わせる） */
-.p-station::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background-image: linear-gradient(to right,
-    transparent, rgba(227, 230, 72, .5) 30%, rgba(227, 230, 72, .5) 70%, transparent);
-}
-
-.p-station__inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.p-station__title {
-  margin-top: 0;
-  font-family: var(--font-display);
-  font-size: clamp(28px, 3.4vw, 48px);
-  font-weight: 800;
-  letter-spacing: -.01em;
-  line-height: 1.1;
-}
-
-.p-station__sub {
-  margin-top: 12px;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: .1em;
-  color: rgba(255, 255, 255, .6);
-}
-
-/* 周波数。中央に細い区切りを挟んで2つ並べる */
-.p-station__freq {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: 30px;
-  padding-top: 26px;
-  border-top: 1px solid rgba(255, 255, 255, .16);
-  font-family: var(--font-display);
-  font-size: clamp(18px, 2vw, 26px);
-  font-weight: 800;
-  letter-spacing: .02em;
-  color: var(--color-lime);
-}
-
-.p-station__freq-sep {
-  width: 1px;
-  height: 18px;
-  background-color: rgba(255, 255, 255, .3);
-}
-
-.p-station__text {
-  max-width: 640px;
-  margin-top: 30px;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 2.3;
-  color: rgba(255, 255, 255, .82);
-}
-
-.p-station__link {
-  margin-top: 40px;
-}
-
-/* ライムの縁取りボタン。ホバーで面を反転させる */
-.p-station__link a {
-  display: inline-block;
-  padding: 15px 40px;
-  border: 1px solid var(--color-lime);
-  border-radius: 999px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .12em;
-  color: var(--color-lime);
-  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
-}
-
-.p-station__link a:hover {
-  background-color: var(--color-lime);
-  color: var(--color-navy);
-}
-
-@media (max-width: 760px) {
-  .p-station {
-    padding-block: 12vh;
-  }
-
-  .p-station__title {
-    font-size: clamp(24px, 8vw, 34px);
-  }
-
-  .p-station__freq {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .p-station__freq-sep {
-    width: 24px;
-    height: 1px;
   }
 }
 
@@ -2301,7 +2286,6 @@ main:has(#about-station) .p-station {
 }
 
 .p-article__heading {
-  max-width: 26ch;
   margin: 26px auto 44px;
   font-size: clamp(19px, 2.2vw, 28px);
   font-weight: 700;

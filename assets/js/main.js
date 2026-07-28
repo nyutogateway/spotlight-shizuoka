@@ -18,6 +18,15 @@
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var SLUG_RE = /^[a-z0-9_-]+$/i;
 
+  /* 縦積みに切り替える境目。CSS の @media と揃えること */
+  var NARROW_MAX = 900;
+  var MQ_WIDE = '(min-width: ' + (NARROW_MAX + 1) + 'px)';
+  var MQ_NARROW = '(max-width: ' + NARROW_MAX + 'px)';
+
+  function isNarrow() {
+    return window.innerWidth <= NARROW_MAX;
+  }
+
   /* ------------------------------------------------------------------
      小さなDOMヘルパ
      ------------------------------------------------------------------ */
@@ -26,6 +35,26 @@
     if (className) node.className = className;
     if (text != null && text !== '') node.textContent = text;
     return node;
+  }
+
+  /* 画像は既定で遅延読み込み。開いてすぐ見えるものだけ eager にする */
+  function imgEl(src, alt, eager) {
+    var img = el('img');
+    img.src = src;
+    img.alt = alt || '';
+    img.decoding = 'async';
+    if (eager) img.fetchPriority = 'high';
+    else img.loading = 'lazy';
+    return img;
+  }
+
+  function clear(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  /* :root に置いた CSS 変数を読む（JS 側の値と二重管理しないため） */
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
   // file:// では fetch が使えないため、データは script タグで読み込む
@@ -193,7 +222,7 @@
      2. INDEX: カード生成
      ------------------------------------------------------------------ */
   function buildCard(entry, isLead) {
-    // 大きい枠は顔、レールは企業ロゴ。どちらもホバーで入れ替わる
+    // 見せるのは人。大きい枠はカラー、レールは白黒でホバーで色が戻る（CSS 側）
     var item = el('li', 'c-card' + (isLead ? ' c-card--lead' : ''));
     item.id = entry.slug;
 
@@ -203,24 +232,8 @@
     var figure = el('figure', 'c-card__img');
 
     var photo = el('span', 'c-card__photo');
-    var img = el('img');
-    img.src = entry.image;
-    img.alt = entry.image_alt || '';
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    photo.appendChild(img);
+    photo.appendChild(imgEl(entry.image, entry.image_alt));
     figure.appendChild(photo);
-
-    if (entry.logo) {
-      var logo = el('span', 'c-card__logo');
-      logo.setAttribute('aria-hidden', 'true');
-      var logoImg = el('img');
-      logoImg.src = entry.logo;
-      logoImg.alt = '';
-      logoImg.loading = 'lazy';
-      logo.appendChild(logoImg);
-      figure.appendChild(logo);
-    }
 
     figure.appendChild(el('span', 'c-card__more', 'READ MORE →'));
 
@@ -245,21 +258,19 @@
     return item;
   }
 
-  function clear(node) {
-    while (node.firstChild) node.removeChild(node.firstChild);
-  }
-
   // VOICE で見せるグループ数。実データが足りないぶんは空き枠で埋める
   var VOICE_GROUP_TOTAL = 6;
 
-  /* 空き枠のグループ。データが揃うまで COMING SOON として先に置く。
-     見出しは実グループと同じ構成にし、本体だけプレースホルダーにする */
-  function buildComingGroup(index) {
-    var section = el('section', 'p-voice p-voice--coming' +
+  /* グループの外枠と見出し。実データのグループも空き枠も同じ形にする。
+     奇数グループは大きいカードが左、偶数は右（p-voice--flip）で、
+     並びが単調にならないようにする */
+  function buildVoiceShell(index, modifier) {
+    var section = el('section', 'p-voice' +
+      (modifier ? ' ' + modifier : '') +
       (index % 2 === 1 ? ' p-voice--flip' : ''));
-    section.id = 'group-' + (index + 1 < 10 ? '0' : '') + (index + 1);
 
     var inner = el('div', 'p-voice__inner l-container');
+    section.appendChild(inner);
 
     var head = el('header', 'p-voice__head');
     var label = el('p', 'p-voice__group');
@@ -267,40 +278,109 @@
     label.appendChild(el('span', 'p-voice__group-num', String(index + 1)));
     head.appendChild(label);
     head.appendChild(el('h2', 'p-voice__title', 'VOICE'));
+    inner.appendChild(head);
+
+    return { section: section, inner: inner, head: head };
+  }
+
+  /* 空き枠のグループ。データが揃うまで COMING SOON として先に置く。
+     見出しは実グループと同じ構成にし、本体だけプレースホルダーにする */
+  function buildComingGroup(index) {
+    var shell = buildVoiceShell(index, 'p-voice--coming');
+    shell.section.id = 'group-' + (index + 1 < 10 ? '0' : '') + (index + 1);
 
     var body = el('div', 'p-voice__body');
     var placeholder = el('div', 'p-voice__coming');
     placeholder.appendChild(el('p', 'p-voice__coming-label', 'COMING SOON'));
     placeholder.appendChild(el('p', 'p-voice__coming-sub', '近日公開'));
     body.appendChild(placeholder);
+    shell.inner.appendChild(body);
 
-    inner.appendChild(head);
-    inner.appendChild(body);
-    section.appendChild(inner);
-    return section;
+    return shell.section;
+  }
+
+  var VOICE_AUTO_MS = 2600;    // 自動送りの間隔
+  var VOICE_SWAP_MS = 220;     // 入れ替えの前に一度沈めておく時間（CSS の is-swapping と揃える）
+
+  /* 5人を順に大きい枠へ送るカルーセル。大きいカードも入れ替えの対象にする */
+  function initVoiceCarousel(section, members, parts) {
+    var offset = 0;
+
+    function paint() {
+      clear(parts.lead);
+      parts.lead.appendChild(buildCard(members[offset], true));
+
+      var list = el('ul', 'p-voice__cards');
+      for (var i = 1; i < members.length; i++) {
+        list.appendChild(buildCard(members[(offset + i) % members.length], false));
+      }
+      clear(parts.rail);
+      parts.rail.appendChild(list);
+    }
+
+    function rotate(direction) {
+      offset = (offset + direction + members.length) % members.length;
+      // 入れ替えは一度沈めてから
+      parts.body.classList.add('is-swapping');
+      window.setTimeout(function () {
+        paint();
+        parts.body.classList.remove('is-swapping');
+      }, VOICE_SWAP_MS);
+    }
+
+    paint();
+
+    /* 自動遷移。カードにカーソルを載せても止めない（送りは一定で回し続ける）。
+       キーボードで中を辿っている間だけは、足元のカードが入れ替わらないよう待つ */
+    var timer = null;
+    var focusHeld = false;
+
+    function play() {
+      if (prefersReducedMotion || timer) return;
+      timer = window.setInterval(function () {
+        if (!focusHeld) rotate(1);
+      }, VOICE_AUTO_MS);
+    }
+
+    function pause() {
+      if (!timer) return;
+      window.clearInterval(timer);
+      timer = null;
+    }
+
+    function manual(direction) {
+      rotate(direction);
+      pause();
+      play();
+    }
+
+    parts.prev.addEventListener('click', function () { manual(-1); });
+    parts.next.addEventListener('click', function () { manual(1); });
+
+    section.addEventListener('focusin', function () { focusHeld = true; });
+    section.addEventListener('focusout', function () { focusHeld = false; });
+
+    // 画面外では動かさない
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) play();
+          else pause();
+        });
+      }, { threshold: 0.25 }).observe(section);
+    } else {
+      play();
+    }
   }
 
   function renderVoices(container, data) {
     var frag = document.createDocumentFragment();
 
     data.groups.forEach(function (group, index) {
-      // 奇数グループは大きいカードが左、偶数は右。並びに変化をつける
-      var flipped = index % 2 === 1;
-      var section = el('section', 'p-voice' + (flipped ? ' p-voice--flip' : ''));
-      section.id = group.id;
+      var shell = buildVoiceShell(index);
+      shell.section.id = group.id;
       // 写真のパララックスはこの枠から配る（下の initParallaxScopes 参照）
-      section.setAttribute('data-parallax-scope', '');
-
-      var inner = el('div', 'p-voice__inner l-container');
-
-      var head = el('header', 'p-voice__head');
-      var label = el('p', 'p-voice__group');
-      label.appendChild(el('span', 'p-voice__group-label', 'GROUP'));
-      label.appendChild(el('span', 'p-voice__group-num', String(index + 1)));
-      head.appendChild(label);
-      head.appendChild(el('h2', 'p-voice__title', 'VOICE'));
-
-      var members = group.entries.slice();
+      shell.section.setAttribute('data-parallax-scope', '');
 
       var nav = el('div', 'p-voice__nav');
       var prev = el('button', 'p-voice__arrow p-voice__arrow--prev');
@@ -311,95 +391,20 @@
       });
       nav.appendChild(prev);
       nav.appendChild(next);
-      head.appendChild(nav);
+      shell.head.appendChild(nav);
 
       var body = el('div', 'p-voice__body');
-      var leadWrap = el('div', 'p-voice__lead');
+      var lead = el('div', 'p-voice__lead');
       var rail = el('div', 'p-voice__rail');
-      body.appendChild(leadWrap);
+      body.appendChild(lead);
       body.appendChild(rail);
+      shell.inner.appendChild(body);
 
-      /* 5人を順に大きい枠へ送る。大きいカードも入れ替えの対象にする */
-      var offset = 0;
-
-      function paint() {
-        clear(leadWrap);
-        leadWrap.appendChild(buildCard(members[offset], true));
-
-        var list = el('ul', 'p-voice__cards');
-        for (var i = 1; i < members.length; i++) {
-          list.appendChild(buildCard(members[(offset + i) % members.length], false));
-        }
-        clear(rail);
-        rail.appendChild(list);
-      }
-
-      function rotate(direction) {
-        offset = (offset + direction + members.length) % members.length;
-        // 入れ替えは一度沈めてから
-        body.classList.add('is-swapping');
-        window.setTimeout(function () {
-          paint();
-          body.classList.remove('is-swapping');
-        }, 220);
-      }
-
-      paint();
-
-      /* 自動遷移 */
-      var AUTO_MS = 4200;
-      var timer = null;
-      var hovering = false;
-
-      function play() {
-        if (prefersReducedMotion || timer) return;
-        timer = window.setInterval(function () {
-          if (!hovering) rotate(1);
-        }, AUTO_MS);
-      }
-
-      function pause() {
-        if (!timer) return;
-        window.clearInterval(timer);
-        timer = null;
-      }
-
-      function manual(direction) {
-        rotate(direction);
-        pause();
-        play();
-      }
-
-      prev.addEventListener('click', function () { manual(-1); });
-      next.addEventListener('click', function () { manual(1); });
-
-      // グループは画面いっぱいなので、止めるのは
-      // 「カードか矢印の上にいるとき」だけに絞る
-      section.addEventListener('mouseover', function (event) {
-        if (event.target.closest('.c-card, .p-voice__nav')) hovering = true;
+      initVoiceCarousel(shell.section, group.entries.slice(), {
+        body: body, lead: lead, rail: rail, prev: prev, next: next
       });
-      section.addEventListener('mouseout', function (event) {
-        if (event.target.closest('.c-card, .p-voice__nav')) hovering = false;
-      });
-      section.addEventListener('focusin', function () { hovering = true; });
-      section.addEventListener('focusout', function () { hovering = false; });
 
-      // 画面外では動かさない
-      if ('IntersectionObserver' in window) {
-        new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) play();
-            else pause();
-          });
-        }, { threshold: 0.25 }).observe(section);
-      } else {
-        play();
-      }
-
-      inner.appendChild(head);
-      inner.appendChild(body);
-      section.appendChild(inner);
-      frag.appendChild(section);
+      frag.appendChild(shell.section);
     });
 
     // 実データのぶんの後ろに、目標数まで空き枠を足す
@@ -429,55 +434,99 @@
     overlayOpacity: 0.64,    // CSS の --opening-overlay-opacity と揃える
     parallax: 10,            // Phase1 で風景がずれる量(px)
     logoLift: 24,            // ロゴが退くときに動く量(px)
-    exitLift: 44,            // 終盤に風景ごと持ち上げる量(px)
-    exitLiftMobile: 30,
-    headerLogoAt: 0.46,      // ここを超えたらヘッダーのロゴを出す（タイムライン進捗の割合）
-    conceptStagger: 0.14,    // コンセプト1行ずつの間隔（大きいほどゆっくり出る）
-    conceptStaggerNarrow: 0.11
+    headerLogoAt: 0.46       // ここを超えたらヘッダーのロゴを出す（タイムライン進捗の割合）
   };
 
-  /* 切り抜きの形。紙面から切り抜いた穴のつもりで、少しだけ辺を崩す。
-     最後は同じ点数のまま矩形へ寄せて、全画面の風景につなぐ。
-     CSS の .opening-window の clip-path と開始値を揃えること */
-  var HERO_CLIP_CUT = 'polygon(39.96% 8.12%,39.73% 11.12%,40.33% 14.08%,40.22% 17.01%,38.80% 19.72%,39.89% 23.00%,39.24% 26.23%,36.88% 28.06%,34.63% 29.18%,32.81% 31.84%,30.45% 33.69%,27.87% 34.99%,25.87% 37.29%,23.78% 39.24%,21.74% 41.21%,19.69% 43.48%,20.46% 46.78%,18.84% 48.99%,18.27% 52.02%,16.94% 55.03%,14.94% 57.52%,13.47% 60.54%,13.29% 64.07%,11.37% 66.57%,10.11% 69.75%,8.67% 72.76%,6.64% 75.08%,4.29% 76.20%,1.76% 77.59%,0.42% 80.55%,0.08% 84.05%,0.00% 87.59%,0.46% 91.15%,1.93% 92.97%,4.69% 92.75%,7.45% 93.02%,10.19% 93.48%,12.92% 94.07%,15.66% 94.44%,17.52% 95.34%,20.25% 95.41%,22.93% 94.55%,25.67% 94.25%,28.42% 94.39%,31.16% 94.93%,33.91% 95.30%,35.88% 96.10%,38.42% 97.54%,41.00% 98.84%,43.62% 100.00%,44.44% 98.83%,42.87% 95.91%,43.37% 92.38%,44.48% 89.08%,46.35% 86.45%,48.51% 84.20%,49.62% 81.89%,50.95% 78.74%,50.82% 75.24%,51.69% 71.87%,53.70% 69.47%,56.03% 67.53%,58.48% 65.83%,60.84% 63.96%,62.76% 61.50%,61.36% 61.50%,60.93% 59.79%,62.53% 57.04%,63.93% 53.94%,66.00% 51.74%,68.58% 50.52%,71.23% 49.47%,72.90% 48.25%,75.56% 49.25%,78.19% 50.37%,80.61% 52.09%,82.64% 54.47%,84.53% 57.10%,84.62% 59.58%,82.13% 60.16%,79.47% 59.32%,77.89% 61.23%,77.40% 64.18%,77.54% 67.34%,78.06% 70.81%,76.46% 73.59%,77.07% 76.44%,76.53% 79.48%,77.11% 83.00%,76.95% 86.46%,75.50% 89.37%,76.68% 92.34%,78.16% 94.88%,79.34% 97.80%,81.76% 99.25%,84.06% 97.61%,86.30% 96.01%,88.13% 93.31%,89.60% 94.80%,89.82% 91.71%,90.51% 88.23%,92.01% 85.23%,94.09% 83.24%,95.11% 79.89%,96.25% 76.61%,98.05% 73.92%,99.72% 71.10%,100.00% 67.49%,98.30% 65.01%,96.46% 62.50%,97.10% 59.37%,95.82% 56.62%,95.72% 53.22%,96.99% 50.02%,95.71% 47.81%,93.08% 46.86%,91.78% 43.90%,90.13% 41.09%,89.69% 37.52%,91.07% 34.47%,92.07% 31.11%,91.89% 27.51%,90.83% 24.36%,88.32% 23.37%,85.58% 23.74%,83.04% 24.79%,80.52% 25.58%,77.82% 26.33%,75.08% 26.84%,72.35% 26.60%,70.74% 24.11%,68.17% 23.55%,66.63% 20.69%,64.44% 20.83%,63.24% 23.99%,63.21% 27.60%,62.47% 30.93%,62.22% 34.42%,62.62% 38.00%,62.65% 41.60%,61.41% 44.61%,58.80% 45.05%,56.29% 43.59%,54.80% 40.65%,53.92% 37.23%,53.14% 33.76%,51.74% 30.80%,49.23% 31.70%,46.83% 30.82%,46.12% 27.49%,45.75% 24.33%,46.27% 20.91%,46.10% 17.33%,46.82% 13.85%,46.72% 10.24%,46.20% 6.69%,45.54% 3.17%,44.45% 0.00%,43.32% 3.29%,41.85% 6.07%)';
-  var HERO_CLIP_FULL = 'polygon(0.00% 0.00%,2.46% 0.00%,4.94% 0.00%,7.34% 0.00%,9.85% 0.00%,12.68% 0.00%,15.37% 0.00%,17.81% 0.00%,19.87% 0.00%,22.51% 0.00%,24.97% 0.00%,27.33% 0.00%,29.83% 0.00%,32.18% 0.00%,34.50% 0.00%,37.00% 0.00%,39.78% 0.00%,42.02% 0.00%,44.55% 0.00%,47.24% 0.00%,49.86% 0.00%,52.61% 0.00%,55.50% 0.00%,58.08% 0.00%,60.89% 0.00%,63.62% 0.00%,66.14% 0.00%,68.28% 0.00%,70.64% 0.00%,73.30% 0.00%,76.18% 0.00%,79.08% 0.00%,82.02% 0.00%,83.93% 0.00%,86.20% 0.00%,88.47% 0.00%,90.75% 0.00%,93.03% 0.00%,95.30% 0.00%,96.99% 0.00%,99.22% 0.00%,100.00% 1.53%,100.00% 3.79%,100.00% 6.05%,100.00% 8.33%,100.00% 10.60%,100.00% 12.35%,100.00% 14.73%,100.00% 17.10%,100.00% 19.45%,100.00% 20.62%,100.00% 23.33%,100.00% 26.25%,100.00% 29.10%,100.00% 31.75%,100.00% 34.30%,100.00% 36.40%,100.00% 39.20%,100.00% 42.07%,100.00% 44.92%,100.00% 47.48%,100.00% 49.97%,100.00% 52.40%,100.00% 54.87%,100.00% 57.43%,100.00% 58.57%,100.00% 60.02%,100.00% 62.63%,100.00% 65.41%,100.00% 67.89%,100.00% 70.23%,100.00% 72.56%,100.00% 74.26%,100.00% 76.58%,100.00% 78.93%,100.00% 81.36%,100.00% 83.92%,100.00% 86.57%,100.00% 88.60%,100.00% 90.69%,100.00% 92.98%,100.00% 95.01%,100.00% 97.46%,99.95% 100.00%,97.08% 100.00%,94.45% 100.00%,92.06% 100.00%,89.54% 100.00%,86.61% 100.00%,83.78% 100.00%,81.11% 100.00%,78.50% 100.00%,76.09% 100.00%,73.52% 100.00%,71.20% 100.00%,68.89% 100.00%,66.64% 100.00%,63.96% 100.00%,62.25% 100.00%,59.71% 100.00%,56.80% 100.00%,54.06% 100.00%,51.70% 100.00%,48.83% 100.00%,45.99% 100.00%,43.34% 100.00%,40.65% 100.00%,37.69% 100.00%,35.23% 100.00%,32.68% 100.00%,30.06% 100.00%,27.58% 100.00%,24.79% 100.00%,21.97% 100.00%,19.88% 100.00%,17.59% 100.00%,14.94% 100.00%,12.27% 100.00%,9.33% 100.00%,6.59% 100.00%,3.72% 100.00%,0.77% 100.00%,0.00% 98.04%,0.00% 95.84%,0.00% 93.57%,0.00% 91.32%,0.00% 89.16%,0.00% 86.86%,0.00% 84.58%,0.00% 82.34%,0.00% 79.92%,0.00% 77.76%,0.00% 75.10%,0.00% 73.31%,0.00% 70.54%,0.00% 67.58%,0.00% 64.79%,0.00% 61.92%,0.00% 58.97%,0.00% 56.03%,0.00% 53.36%,0.00% 51.19%,0.00% 48.81%,0.00% 46.12%,0.00% 43.22%,0.00% 40.31%,0.00% 37.63%,0.00% 35.45%,0.00% 33.35%,0.00% 30.56%,0.00% 27.96%,0.00% 25.13%,0.00% 22.19%,0.00% 19.28%,0.00% 16.32%,0.00% 13.38%,0.00% 10.45%,0.00% 7.71%,0.00% 4.86%,0.00% 2.28%)';
+  /* Hero の締め（放送のお知らせ→覆い→コンセプト文→送り出し）の
+     timeline 上の位置と量。PC と狭い画面で数値だけが違うので表にしてある。
+     ・at*      : timeline 上の位置
+     ・rise     : コンセプト1行が下から上がってくる量(px)
+     ・stagger  : 1行ずつの間隔（大きいほどゆっくり出る）
+     ・lift     : 終盤に風景ごと持ち上げる量(px)
+     ・stop     : コンセプトが出そろってから送り出しが始まるまでの真ん中
+                  （snap の止め位置。timeline 全体の長さで割って割合にする） */
+  var HERO_FINALE = {
+    wide: {
+      atOnair: .74, atOverlay: .88, atConcept: .92, atLines: .96,
+      rise: 22, stagger: .14, lines: .20,
+      atExit: 1.86, lift: 44, stop: 1.74
+    },
+    narrow: {
+      atOnair: .58, atOverlay: .70, atConcept: .74, atLines: .78,
+      rise: 18, stagger: .11, lines: .18,
+      atExit: 1.66, lift: 30, stop: 1.54
+    }
+  };
+
+  /* 切り抜きが最後に寄っていく形。紙面から切り抜いた穴（CSS の
+     .opening-window の clip-path）と同じ点数のまま矩形へ寄せて、
+     全画面の風景につなぐ */
+  var HERO_CLIP_FULL ='polygon(0.00% 0.00%,2.46% 0.00%,4.94% 0.00%,7.34% 0.00%,9.85% 0.00%,12.68% 0.00%,15.37% 0.00%,17.81% 0.00%,19.87% 0.00%,22.51% 0.00%,24.97% 0.00%,27.33% 0.00%,29.83% 0.00%,32.18% 0.00%,34.50% 0.00%,37.00% 0.00%,39.78% 0.00%,42.02% 0.00%,44.55% 0.00%,47.24% 0.00%,49.86% 0.00%,52.61% 0.00%,55.50% 0.00%,58.08% 0.00%,60.89% 0.00%,63.62% 0.00%,66.14% 0.00%,68.28% 0.00%,70.64% 0.00%,73.30% 0.00%,76.18% 0.00%,79.08% 0.00%,82.02% 0.00%,83.93% 0.00%,86.20% 0.00%,88.47% 0.00%,90.75% 0.00%,93.03% 0.00%,95.30% 0.00%,96.99% 0.00%,99.22% 0.00%,100.00% 1.53%,100.00% 3.79%,100.00% 6.05%,100.00% 8.33%,100.00% 10.60%,100.00% 12.35%,100.00% 14.73%,100.00% 17.10%,100.00% 19.45%,100.00% 20.62%,100.00% 23.33%,100.00% 26.25%,100.00% 29.10%,100.00% 31.75%,100.00% 34.30%,100.00% 36.40%,100.00% 39.20%,100.00% 42.07%,100.00% 44.92%,100.00% 47.48%,100.00% 49.97%,100.00% 52.40%,100.00% 54.87%,100.00% 57.43%,100.00% 58.57%,100.00% 60.02%,100.00% 62.63%,100.00% 65.41%,100.00% 67.89%,100.00% 70.23%,100.00% 72.56%,100.00% 74.26%,100.00% 76.58%,100.00% 78.93%,100.00% 81.36%,100.00% 83.92%,100.00% 86.57%,100.00% 88.60%,100.00% 90.69%,100.00% 92.98%,100.00% 95.01%,100.00% 97.46%,99.95% 100.00%,97.08% 100.00%,94.45% 100.00%,92.06% 100.00%,89.54% 100.00%,86.61% 100.00%,83.78% 100.00%,81.11% 100.00%,78.50% 100.00%,76.09% 100.00%,73.52% 100.00%,71.20% 100.00%,68.89% 100.00%,66.64% 100.00%,63.96% 100.00%,62.25% 100.00%,59.71% 100.00%,56.80% 100.00%,54.06% 100.00%,51.70% 100.00%,48.83% 100.00%,45.99% 100.00%,43.34% 100.00%,40.65% 100.00%,37.69% 100.00%,35.23% 100.00%,32.68% 100.00%,30.06% 100.00%,27.58% 100.00%,24.79% 100.00%,21.97% 100.00%,19.88% 100.00%,17.59% 100.00%,14.94% 100.00%,12.27% 100.00%,9.33% 100.00%,6.59% 100.00%,3.72% 100.00%,0.77% 100.00%,0.00% 98.04%,0.00% 95.84%,0.00% 93.57%,0.00% 91.32%,0.00% 89.16%,0.00% 86.86%,0.00% 84.58%,0.00% 82.34%,0.00% 79.92%,0.00% 77.76%,0.00% 75.10%,0.00% 73.31%,0.00% 70.54%,0.00% 67.58%,0.00% 64.79%,0.00% 61.92%,0.00% 58.97%,0.00% 56.03%,0.00% 53.36%,0.00% 51.19%,0.00% 48.81%,0.00% 46.12%,0.00% 43.22%,0.00% 40.31%,0.00% 37.63%,0.00% 35.45%,0.00% 33.35%,0.00% 30.56%,0.00% 27.96%,0.00% 25.13%,0.00% 22.19%,0.00% 19.28%,0.00% 16.32%,0.00% 13.38%,0.00% 10.45%,0.00% 7.71%,0.00% 4.86%,0.00% 2.28%)';
 
   /* CSS 変数で指定した余白(vw / svh)を px にして、
      中盤でどこまで詰めるかを返す */
   function bleed(base, name) {
-    var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    var value = parseFloat(raw) || 0;          // 例: "-5vw" → -5
+    var value = parseFloat(cssVar(name)) || 0;   // 例: "-5vw" → -5
     var px = base * value / 100;
     return px * (1 - HERO_SETTINGS.windowMidBleed);
   }
 
   /* 本文の地色。Hero の締めで下から覗かせる色に使う */
   function pageBackground() {
-    var value = getComputedStyle(document.documentElement)
-      .getPropertyValue('--color-bg').trim();
-    return value || '#E9EDF0';
+    return cssVar('--color-bg') || '#E9EDF0';
   }
 
-  /* Hero の締め。風景とコンセプト文をまとめて少し持ち上げ、
-     下から本文の地色（＝次のセクションと同じ色）を覗かせて送り出す。
+  /* 全画面の風景になったあとの締め。PC と狭い画面で共通の組み立て。
+     放送のお知らせを引き、覆いをかけてコンセプト文を1行ずつ読ませ、
+     最後に風景ごと少し持ち上げて次の誌面へ送り出す。
      sticky の解除自体は CSS 任せなので、スクロール位置は飛ばない。
-     Hero の timeline に足すだけで、ScrollTrigger は増やさない */
-  function addHeroExitTransition(timeline, targets, lift, position) {
-    timeline.to(targets, {
-      y: -lift,
-      ease: 'none',
-      duration: .10
-    }, position);
+     timeline に足すだけで ScrollTrigger は増やさない。
+     戻り値は snap の止め位置（進捗の割合） */
+  function addHeroFinale(tl, parts, at) {
+    tl
+      /* ここから先はコンセプト文を読ませる段。ヘッダーが地を取り戻すと
+         札の上を帯が横切ってしまうので、放送のお知らせは引く */
+      .to(parts.onair, { opacity: 0, ease: 'none', duration: .12 }, at.atOnair)
+
+      /* 風景の上でコンセプト文を1行ずつ、ゆっくり読ませる */
+      .to(parts.overlay, {
+        opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16
+      }, at.atOverlay)
+      .set(parts.concept, { opacity: 1 }, at.atConcept)
+      .fromTo(parts.conceptLines,
+        { opacity: 0, y: at.rise },
+        {
+          opacity: 1,
+          y: 0,
+          stagger: at.stagger,
+          ease: 'power2.out',
+          duration: at.lines
+        }, at.atLines)
+
+      /* 読む時間 */
+      .to({}, { duration: .14 })
+
+      /* 送り出し。下から覗くのは、次のセクションと同じ本文の地色 */
+      .to([parts.backdrop, parts.frame, parts.overlay, parts.concept], {
+        y: -at.lift, ease: 'none', duration: .10
+      }, at.atExit)
+      .to(parts.sticky, {
+        backgroundColor: pageBackground(), ease: 'none', duration: .10
+      }, at.atExit);
+
+    return at.stop / tl.duration();
   }
 
   function initOpeningHero(hero) {
     var sticky = hero.querySelector('.opening-hero__sticky');
+    var backdrop = hero.querySelector('.opening-hero__backdrop');
     var logo = hero.querySelector('.opening-hero__logo');
     var frame = hero.querySelector('.opening-window');
     var image = hero.querySelector('.opening-window__image');
     var scroll = hero.querySelector('.opening-hero__scroll');
     var overlay = hero.querySelector('.opening-hero__overlay');
     var concept = hero.querySelector('.opening-hero__concept');
+    var onair = hero.querySelector('.opening-hero__onair');
     var conceptLines = hero.querySelectorAll('.opening-hero__concept-line');
 
     function stay(reason) {
@@ -485,7 +534,7 @@
       hero.classList.add('is-static');
     }
 
-    if (!sticky || !logo || !frame || !image || !overlay || !concept) {
+    if (!sticky || !backdrop || !logo || !frame || !image || !overlay || !concept) {
       stay('必要な要素が足りません');
       return;
     }
@@ -518,12 +567,20 @@
     /* ヘッダーのロゴの出し分け。頭（進捗が浅い）のうちは大きな Hero ロゴが
        主役なので隠し、reveal が進んだコンセプト段やコンテンツ側では出す。
        Hero を通り過ぎていれば（スクロール位置で判定）常に出す＝リロードで
-       途中に居ても scrub の追従を待たずに正しく表示される */
+       途中に居ても scrub の追従を待たずに正しく表示される。
+
+       頭に戻っているあいだは進捗を見ずに必ず隠す。scrub は追従が遅れるので、
+       スクロール位置が頭でも progress はしばらく高いままになり、
+       それを見て判定するとヘッダーが出たまま残ってしまう */
     function updateHeaderLogo() {
       if (!header) return;
-      var pastHero = window.scrollY > (hero.offsetHeight - window.innerHeight) * 0.6;
+      var heroScroll = hero.offsetHeight - window.innerHeight;
+      var y = window.scrollY;
+      var atHead = y < heroScroll * 0.2;
+      var pastHero = y > heroScroll * 0.6;
       var p = activeTL ? activeTL.progress() : 0;
-      header.classList.toggle('is-logo-hidden', !pastHero && p < HERO_SETTINGS.headerLogoAt);
+      header.classList.toggle('is-logo-hidden',
+        atHead || (!pastHero && p < HERO_SETTINGS.headerLogoAt));
     }
 
     /* スクロールに滑らかに追従（scrub）して“流れる”ように再生する。
@@ -563,14 +620,64 @@
 
 
     /* 読み込み直後の登場。スクロール演出とぶつからないよう、
-       timeline が触らない子要素だけを動かす */
-    gsap.from(hero.querySelector('.opening-hero__logo img'), {
-      opacity: 0,
-      y: 20,
-      duration: 1.1,
-      ease: 'power2.out',
-      delay: .1
-    });
+       timeline が触らない子要素だけを動かす。
+
+       ロゴは画面の左の外から、3回跳ねながら定位置まで入ってくる。
+       跳び上がるときは縦に伸び、着地の瞬間に潰れる（squash & stretch）。
+       transform-origin を下端に置いているので、足で着地して弾んで見える。
+       跳ぶ幅・高さ・潰れ方は進むほど小さくして、勢いが減っていくようにする。
+       スクロール側の timeline は h1 の y / opacity を触るので、
+       ここは img の xPercent / yPercent / scale だけに閉じてぶつからないようにする */
+    var logoImage = hero.querySelector('.opening-hero__logo img');
+    if (logoImage) {
+      /* to    : そのホップの着地点（定位置＝0 までの xPercent）
+         up    : 跳び上がる高さ
+         rise  : 上がる時間 / fall : 落ちる時間
+         sx,sy : 着地で潰れる量 */
+      var HOPS = [
+        { to: -74, up: 34, rise: .30, fall: .26, sx: 1.14, sy: .81 },
+        { to: -27, up: 22, rise: .24, fall: .20, sx: 1.09, sy: .88 },
+        { to:   0, up: 11, rise: .18, fall: .15, sx: 1.05, sy: .94 }
+      ];
+
+      gsap.set(logoImage, {
+        transformOrigin: '50% 100%',
+        xPercent: -155,          // 画面の外
+        yPercent: 0
+      });
+
+      var intro = gsap.timeline({ delay: .12 });
+
+      HOPS.forEach(function (hop, i) {
+        var at = intro.duration();          // このホップの開始位置
+        var last = i === HOPS.length - 1;
+        var land = at + hop.rise + hop.fall;
+
+        intro
+          // 横移動は一定の速さで。上下の弧と重ねて放物線に見せる
+          .to(logoImage, {
+            xPercent: hop.to, duration: hop.rise + hop.fall, ease: 'none'
+          }, at)
+          .to(logoImage, {
+            yPercent: -hop.up, scaleX: .95, scaleY: 1.09,
+            duration: hop.rise, ease: 'power2.out'
+          }, at)
+          .to(logoImage, {
+            yPercent: 0, scaleX: 1, scaleY: 1,
+            duration: hop.fall, ease: 'power2.in'
+          }, at + hop.rise)
+          // 着地の潰れ
+          .to(logoImage, {
+            scaleX: hop.sx, scaleY: hop.sy, duration: .09, ease: 'power2.out'
+          }, land)
+          // 戻り。最後だけ余韻を残す
+          .to(logoImage, {
+            scaleX: 1, scaleY: 1,
+            duration: last ? .5 : .16,
+            ease: last ? 'elastic.out(1, .45)' : 'power2.out'
+          }, land + .09);
+      });
+    }
     gsap.from(hero.querySelector('.opening-window__visual'), {
       opacity: 0,
       duration: 1.2,
@@ -587,11 +694,17 @@
       });
     }
 
+    /* 締めの共通部分に渡す顔ぶれ */
+    var finaleParts = {
+      sticky: sticky, backdrop: backdrop, frame: frame,
+      overlay: overlay, concept: concept, conceptLines: conceptLines, onair: onair
+    };
+
     var media = gsap.matchMedia();
 
     /* PC。中央から左に大きなロゴ、右下に切り抜き。
        切り抜きが全画面まで広がり、そのまま風景の中に入る */
-    media.add('(min-width: 901px)', function () {
+    media.add(MQ_WIDE, function () {
       gsap.set(logo, { yPercent: -50 });
       gsap.set(concept, { xPercent: -50, yPercent: -50 });
 
@@ -633,42 +746,15 @@
           ease: 'none',
           duration: .28
         }, .50)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50)
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50);
 
-        /* 全画面になってから一拍おく。ここで風景だけを見せる */
-
-        /* Phase 5 — 風景の上でコンセプト文を1行ずつ、ゆっくり読ませる */
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16 }, .88)
-        .set(concept, { opacity: 1 }, .92)
-        .fromTo(conceptLines,
-          { opacity: 0, y: 22 },
-          {
-            opacity: 1,
-            y: 0,
-            stagger: HERO_SETTINGS.conceptStagger,
-            ease: 'power2.out',
-            duration: .20
-          }, .96)
-
-        /* 読む時間 */
-        .to({}, { duration: .14 });
-
-      /* Phase 6 — 次の誌面へ送り出す */
-      addHeroExitTransition(tl, [frame, overlay, concept], HERO_SETTINGS.exitLift, 1.86);
-      // 持ち上げたときに覗くのは、次のセクションと同じ本文の地色
-      tl.to(sticky, {
-        backgroundColor: pageBackground(),
-        ease: 'none',
-        duration: .10
-      }, 1.86);
-
-      // コンセプトが出そろってから送り出しが始まるまでの真ん中
-      conceptStop = 1.74 / tl.duration();
+      /* 全画面になってから一拍おいて、Phase 5-6（コンセプト文と送り出し）へ */
+      conceptStop = addHeroFinale(tl, finaleParts, HERO_FINALE.wide);
       activeTL = tl;
     });
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
-    media.add('(max-width: 900px)', function () {
+    media.add(MQ_NARROW, function () {
       gsap.set(concept, { xPercent: -50, yPercent: -50 });
 
       var tlNarrow = timeline();
@@ -687,29 +773,10 @@
           ease: 'none',
           duration: .32
         }, .28)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
-        /* 全画面になってから一拍おく */
-        .to(overlay, { opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16 }, .70)
-        .set(concept, { opacity: 1 }, .74)
-        .fromTo(conceptLines,
-          { opacity: 0, y: 18 },
-          {
-            opacity: 1,
-            y: 0,
-            stagger: HERO_SETTINGS.conceptStaggerNarrow,
-            ease: 'power2.out',
-            duration: .18
-          }, .78)
-        .to({}, { duration: .14 });
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28);
 
-      addHeroExitTransition(tlNarrow, [frame, overlay, concept], HERO_SETTINGS.exitLiftMobile, 1.66);
-      tlNarrow.to(sticky, {
-        backgroundColor: pageBackground(),
-        ease: 'none',
-        duration: .10
-      }, 1.66);
-
-      conceptStop = 1.54 / tlNarrow.duration();
+      /* 全画面になってから一拍おいて、コンセプト文と送り出しへ */
+      conceptStop = addHeroFinale(tlNarrow, finaleParts, HERO_FINALE.narrow);
       activeTL = tlNarrow;
     });
 
@@ -737,62 +804,64 @@
       typeof ScrollTrigger !== 'undefined';
   }
 
-  function isNarrow() {
-    return window.innerWidth <= 900;
-  }
+  /* 「枠」に ScrollTrigger を1つだけ置き、進捗を CSS 変数として配る。
+     枠の中の要素は変数を継承するので、あとから差し込まれたものも追従する。
+     （カードは自動送りで作り直されるので、要素1つずつに持たせると
+     描き直しのたびに ScrollTrigger が増えてしまう）
 
-  /* 画像のパララックス。
-     カードは自動送りで作り直されるので、画像1枚ずつに ScrollTrigger を
-     持たせるとリピント（4.2秒ごと）のたびに増えてしまう。
-     そこで「枠」側に1つだけ置き、CSS変数を配る形にしている。
-     新しく差し込まれた画像も変数を継承するので追従する */
-  function initParallaxScopes(root) {
-    var scopes = (root || document).querySelectorAll('[data-parallax-scope]');
-    if (!scopes.length || !scrollMotionReady()) return;
+     options: attr / property / scrub / value(progress) / skipHidden */
+  function initScrubVar(root, options) {
+    var nodes = (root || document).querySelectorAll('[' + options.attr + ']');
+    if (!nodes.length || !scrollMotionReady()) return;
 
-    Array.prototype.forEach.call(scopes, function (scope) {
+    var doneAttr = options.attr + '-ready';
+
+    Array.prototype.forEach.call(nodes, function (node) {
       // 二重生成しない。非表示の枠は測れないので飛ばす
-      if (scope.hasAttribute('data-parallax-ready')) return;
-      if (!scope.offsetParent && scope.offsetHeight === 0) return;
-      scope.setAttribute('data-parallax-ready', '');
+      if (node.hasAttribute(doneAttr)) return;
+      if (options.skipHidden && !node.offsetParent && node.offsetHeight === 0) return;
+      node.setAttribute(doneAttr, '');
 
       ScrollTrigger.create({
-        trigger: scope,
+        trigger: node,
         start: 'top bottom',
         end: 'bottom top',
-        scrub: true,
+        scrub: options.scrub,
         onUpdate: function (self) {
-          var range = isNarrow()
-            ? BODY_MOTION.parallaxRangeNarrow
-            : BODY_MOTION.parallaxRange;
-          var value = BODY_MOTION.parallaxBase + (self.progress - 0.5) * range;
-          scope.style.setProperty('--parallax-shift', value.toFixed(2) + '%');
+          node.style.setProperty(options.property, options.value(self.progress));
         }
       });
     });
   }
 
+  /* 画像のパララックス */
+  function initParallaxScopes(root) {
+    initScrubVar(root, {
+      attr: 'data-parallax-scope',
+      property: '--parallax-shift',
+      scrub: true,
+      skipHidden: true,
+      value: function (progress) {
+        var range = isNarrow()
+          ? BODY_MOTION.parallaxRangeNarrow
+          : BODY_MOTION.parallaxRange;
+        return (BODY_MOTION.parallaxBase + (progress - 0.5) * range).toFixed(2) + '%';
+      }
+    });
+  }
+
   /* 背景の大きな英字。スクロールに合わせて横へゆっくり送るだけ */
   function initTypeBands(root) {
-    var bands = (root || document).querySelectorAll('[data-typeband]');
-    if (!bands.length || !scrollMotionReady()) return;
-
-    Array.prototype.forEach.call(bands, function (band) {
-      if (band.hasAttribute('data-typeband-ready')) return;
-      band.setAttribute('data-typeband-ready', '');
-
-      ScrollTrigger.create({
-        trigger: band,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: BODY_MOTION.scrub,
-        onUpdate: function (self) {
-          var shift = isNarrow()
-            ? BODY_MOTION.typeShiftNarrow
-            : BODY_MOTION.typeShift;
-          band.style.setProperty('--typeband-shift', (-shift * self.progress).toFixed(1) + 'px');
-        }
-      });
+    initScrubVar(root, {
+      attr: 'data-typeband',
+      property: '--typeband-shift',
+      scrub: BODY_MOTION.scrub,
+      value: function (progress) {
+        var shift = isNarrow()
+          ? BODY_MOTION.typeShiftNarrow
+          : BODY_MOTION.typeShift;
+        return (-shift * progress).toFixed(1) + 'px';
+      }
     });
   }
 
@@ -801,12 +870,7 @@
      ------------------------------------------------------------------ */
   function buildFigure(block) {
     var figure = el('figure', 'p-article__figure');
-    var img = el('img');
-    img.src = block.src;
-    img.alt = block.alt || '';
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    figure.appendChild(img);
+    figure.appendChild(imgEl(block.src, block.alt));
     if (block.alt) figure.appendChild(el('figcaption', 'p-article__caption', block.alt));
     return figure;
   }
@@ -825,13 +889,9 @@
     for (var loop = 0; loop < 2; loop++) {
       list.forEach(function (block) {
         var item = el('div', 'c-marquee__item');
+        // 2周目は同じ写真の複製なので、読み上げからは外す
         if (loop === 1) item.setAttribute('aria-hidden', 'true');
-        var img = el('img');
-        img.src = block.src;
-        img.alt = loop === 0 ? (block.alt || '') : '';
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        item.appendChild(img);
+        item.appendChild(imgEl(block.src, loop === 0 ? block.alt : ''));
         track.appendChild(item);
       });
     }
@@ -839,7 +899,7 @@
 
     // 1画面に何枚見せるかから、1枚の幅を出す
     function layout() {
-      var perView = window.innerWidth <= 600 ? 2 : (window.innerWidth <= 900 ? 3 : 5);
+      var perView = window.innerWidth <= 600 ? 2 : (isNarrow() ? 3 : 5);
       var width = (marquee.clientWidth - MARQUEE_GAP * (perView - 1)) / perView;
       marquee.style.setProperty('--marquee-item', width.toFixed(2) + 'px');
       marquee.style.setProperty('--marquee-duration', (list.length * MARQUEE_SEC_PER_ITEM).toFixed(1) + 's');
@@ -894,13 +954,9 @@
     // 頭は「写真＝左／人物情報＝右」の2段組
     var head = el('header', 'p-article__head');
 
+    // 開いてすぐ見える1枚なので、遅延させず優先して読む
     var portrait = el('figure', 'p-article__portrait');
-    var portraitImg = el('img');
-    portraitImg.src = article.image;
-    portraitImg.alt = article.image_alt || '';
-    portraitImg.decoding = 'async';
-    portraitImg.fetchPriority = 'high';
-    portrait.appendChild(portraitImg);
+    portrait.appendChild(imgEl(article.image, article.image_alt, true));
 
     var intro = el('div', 'p-article__intro');
     intro.appendChild(el('h1', 'p-article__title', article.title));
@@ -1029,14 +1085,6 @@
     initHeader();
     initMenu();
 
-    /* 放送局の波形は SMIL(<animate>)で動かしている（Safari/iOS 対応のため）。
-       SMIL は CSS の prefers-reduced-motion では止まらないので、ここで止める */
-    if (prefersReducedMotion) {
-      document.querySelectorAll('.p-station__wave').forEach(function (svg) {
-        if (typeof svg.pauseAnimations === 'function') svg.pauseAnimations();
-      });
-    }
-
     var hero = document.querySelector('[data-opening-hero]');
     if (hero) {
       // Hero がこけてもページ全体は止めない
@@ -1055,8 +1103,6 @@
     if (article) initArticlePage(article);
 
     initReveal([
-      '.p-station__title', '.p-station__sub',           // ABOUT
-      '.p-station__freq', '.p-station__text', '.p-station__link',
       '.p-page__head', '.p-page__notice', '.p-page__section', '.p-page__back',
       '.c-form__row', '.c-form__consent', '.c-form__submit',
       '[data-reveal]'
