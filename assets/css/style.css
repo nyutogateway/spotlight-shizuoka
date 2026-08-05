@@ -818,7 +818,7 @@ body {
   --opening-veil: .22;              /* 写真全体にかける暗さ。ここ1つで明暗を調整する */
   --opening-contrast: 1.22;         /* 写真そのものの明暗の開き。上げるほど締まる */
   --opening-saturate: 1.08;
-  --opening-photo-horizon: 63.3%;   /* 写真の中で水平線がある高さ。写真を替えたら測り直す */
+  --opening-photo-horizon: 63.4%;   /* 写真の中で水平線がある高さ。写真を替えたら測り直す */
   /* 写真をどこまで拡大して置くか。画面をどう覆うかと、
      手前にどこまで砂浜を入れるかがこれで決まる */
   --opening-scene-width: max(100vw, 205svh);
@@ -1095,7 +1095,7 @@ body {
   aspect-ratio: 1000 / 667;
   transform: translate(-50%, calc(var(--opening-photo-horizon) * -1));
   pointer-events: none;
-  background-image: url("../img/hero-sky.jpg");
+  background-image: url("../img/hero_sky.jpg");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -1737,24 +1737,11 @@ body {
 }
 
 /* 送り。地色に線1本だと押せることに気づかれないので、
-   濃紺で塗って「操作するもの」として立たせ、添え書きを付ける */
+   濃紺で塗って「操作するもの」として立たせる */
 .p-voice__nav {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
-}
-
-/* 添え書きはボタンの上に1行で置く（order:-1 と幅100%で先頭の行に回す） */
-.p-voice__nav-label {
-  order: -1;
-  flex-basis: 100%;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .14em;
-  line-height: 1.4;
-  color: var(--color-sub);
+  gap: 12px;
 }
 
 .p-voice__arrow {

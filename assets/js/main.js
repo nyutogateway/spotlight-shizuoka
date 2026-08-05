@@ -399,8 +399,6 @@
       });
       nav.appendChild(left);
       nav.appendChild(right);
-      // ボタンだけだと見落とされるので、何が起きるかを短く添える
-      nav.appendChild(el('p', 'p-voice__nav-label', '他の人を見る'));
       shell.head.appendChild(nav);
 
       var body = el('div', 'p-voice__body');
