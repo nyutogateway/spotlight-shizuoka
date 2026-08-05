@@ -249,8 +249,8 @@
       info.appendChild(en);
     }
     info.appendChild(el('p', 'c-card__jp', entry.person));
-    info.appendChild(el('p', 'c-card__job',
-      entry.position ? entry.company + '／' + entry.position : entry.company));
+    // 役職は出さない（記事側で読ませる）。一覧では所属だけ添える
+    info.appendChild(el('p', 'c-card__job', entry.company));
 
     link.appendChild(figure);
     link.appendChild(info);
@@ -354,8 +354,13 @@
       play();
     }
 
-    parts.prev.addEventListener('click', function () { manual(-1); });
-    parts.next.addEventListener('click', function () { manual(1); });
+    /* ボタンは「並びをどちらへずらすか」で持つ。
+       ・左＝1つ左へずれる＝次の人が大きい枠へ入る（自動送りと同じ向き）
+       ・右＝1つ右へずれる＝前の人が戻ってくる
+       大きい枠が左でも右でも（p-voice--flip）、カードが動く向きは
+       押したボタンと必ず一致する */
+    parts.left.addEventListener('click', function () { manual(1); });
+    parts.right.addEventListener('click', function () { manual(-1); });
 
     section.addEventListener('focusin', function () { focusHeld = true; });
     section.addEventListener('focusout', function () { focusHeld = false; });
@@ -382,15 +387,20 @@
       // 写真のパララックスはこの枠から配る（下の initParallaxScopes 参照）
       shell.section.setAttribute('data-parallax-scope', '');
 
+      /* 送りは「人の前後」ではなく「カードをどちらへ動かすか」で持つ。
+         大きい枠が左右どちらのグループでも、押した向きと動く向きが揃う */
       var nav = el('div', 'p-voice__nav');
-      var prev = el('button', 'p-voice__arrow p-voice__arrow--prev');
-      var next = el('button', 'p-voice__arrow p-voice__arrow--next');
-      [prev, next].forEach(function (button, i) {
+      var left = el('button', 'p-voice__arrow p-voice__arrow--left');
+      var right = el('button', 'p-voice__arrow p-voice__arrow--right');
+      [left, right].forEach(function (button, i) {
         button.type = 'button';
-        button.appendChild(el('span', 'u-visually-hidden', i ? '次の人へ' : '前の人へ'));
+        button.appendChild(el('span', 'u-visually-hidden',
+          i ? 'カードを右へ送る' : 'カードを左へ送る'));
       });
-      nav.appendChild(prev);
-      nav.appendChild(next);
+      nav.appendChild(left);
+      nav.appendChild(right);
+      // ボタンだけだと見落とされるので、何が起きるかを短く添える
+      nav.appendChild(el('p', 'p-voice__nav-label', '他の人を見る'));
       shell.head.appendChild(nav);
 
       var body = el('div', 'p-voice__body');
@@ -401,7 +411,7 @@
       shell.inner.appendChild(body);
 
       initVoiceCarousel(shell.section, group.entries.slice(), {
-        body: body, lead: lead, rail: rail, prev: prev, next: next
+        body: body, lead: lead, rail: rail, left: left, right: right
       });
 
       frag.appendChild(shell.section);
@@ -437,24 +447,27 @@
     headerLogoAt: 0.46       // ここを超えたらヘッダーのロゴを出す（タイムライン進捗の割合）
   };
 
-  /* Hero の締め（放送のお知らせ→覆い→コンセプト文→送り出し）の
-     timeline 上の位置と量。PC と狭い画面で数値だけが違うので表にしてある。
+  /* コンセプトを読み終えてから Hero を抜けるまでの間 */
+  var HERO_READ_HOLD = .18;
+
+  /* Hero の締め（放送のお知らせ→覆い→コンセプト文）の timeline 上の
+     位置と量。PC と狭い画面で数値だけが違うので表にしてある。
      ・at*      : timeline 上の位置
      ・rise     : コンセプト1行が下から上がってくる量(px)
      ・stagger  : 1行ずつの間隔（大きいほどゆっくり出る）
-     ・lift     : 終盤に風景ごと持ち上げる量(px)
-     ・stop     : コンセプトが出そろってから送り出しが始まるまでの真ん中
-                  （snap の止め位置。timeline 全体の長さで割って割合にする） */
+
+     以前は終盤に風景ごと持ち上げて下から地色を覗かせていたが、
+     止まる位置がちょうど持ち上げきったところで、風景の下に地色の帯が
+     残って隙間に見えてしまうのでやめた。Hero を抜けると sticky が
+     外れて風景ごと上へ流れるので、送り出しはそれで足りる */
   var HERO_FINALE = {
     wide: {
       atOnair: .74, atOverlay: .88, atConcept: .92, atLines: .96,
-      rise: 22, stagger: .14, lines: .20,
-      atExit: 1.86, lift: 44, stop: 1.74
+      rise: 22, stagger: .14, lines: .20
     },
     narrow: {
       atOnair: .58, atOverlay: .70, atConcept: .74, atLines: .78,
-      rise: 18, stagger: .11, lines: .18,
-      atExit: 1.66, lift: 30, stop: 1.54
+      rise: 18, stagger: .11, lines: .18
     }
   };
 
@@ -471,15 +484,10 @@
     return px * (1 - HERO_SETTINGS.windowMidBleed);
   }
 
-  /* 本文の地色。Hero の締めで下から覗かせる色に使う */
-  function pageBackground() {
-    return cssVar('--color-bg') || '#E9EDF0';
-  }
-
   /* 全画面の風景になったあとの締め。PC と狭い画面で共通の組み立て。
-     放送のお知らせを引き、覆いをかけてコンセプト文を1行ずつ読ませ、
-     最後に風景ごと少し持ち上げて次の誌面へ送り出す。
-     sticky の解除自体は CSS 任せなので、スクロール位置は飛ばない。
+     放送のお知らせを引き、覆いをかけてコンセプト文を1行ずつ読ませる。
+     風景は最後まで画面いっぱいのまま置き、送り出しは Hero を抜けた
+     ところで sticky が外れるのに任せる（下に地色の帯を作らない）。
      timeline に足すだけで ScrollTrigger は増やさない。
      戻り値は snap の止め位置（進捗の割合） */
   function addHeroFinale(tl, parts, at) {
@@ -501,20 +509,16 @@
           stagger: at.stagger,
           ease: 'power2.out',
           duration: at.lines
-        }, at.atLines)
+        }, at.atLines);
 
-      /* 読む時間 */
-      .to({}, { duration: .14 })
+    /* コンセプトが出そろった位置。ここが snap の止め位置になる。
+       行数はデータ側で変わりうるので、実際の長さから取る */
+    var settled = tl.duration();
 
-      /* 送り出し。下から覗くのは、次のセクションと同じ本文の地色 */
-      .to([parts.backdrop, parts.frame, parts.overlay, parts.concept], {
-        y: -at.lift, ease: 'none', duration: .10
-      }, at.atExit)
-      .to(parts.sticky, {
-        backgroundColor: pageBackground(), ease: 'none', duration: .10
-      }, at.atExit);
+    /* 読む時間。ここを過ぎると Hero を抜けて、風景ごと上へ流れる */
+    tl.to({}, { duration: HERO_READ_HOLD });
 
-    return at.stop / tl.duration();
+    return settled / tl.duration();
   }
 
   function initOpeningHero(hero) {
@@ -696,7 +700,6 @@
 
     /* 締めの共通部分に渡す顔ぶれ */
     var finaleParts = {
-      sticky: sticky, backdrop: backdrop, frame: frame,
       overlay: overlay, concept: concept, conceptLines: conceptLines, onair: onair
     };
 
@@ -746,7 +749,9 @@
           ease: 'none',
           duration: .28
         }, .50)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50);
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, y: 0, ease: 'none', duration: .28 }, .50)
+        /* 穴が広がりきるのに合わせて、切り抜きの中に色が戻る */
+        .to(sticky, { '--opening-window-gray': 0, ease: 'none', duration: .28 }, .50);
 
       /* 全画面になってから一拍おいて、Phase 5-6（コンセプト文と送り出し）へ */
       conceptStop = addHeroFinale(tl, finaleParts, HERO_FINALE.wide);
@@ -773,7 +778,9 @@
           ease: 'none',
           duration: .32
         }, .28)
-        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28);
+        .to(image, { scale: HERO_SETTINGS.imageScaleEnd, ease: 'none', duration: .32 }, .28)
+        /* 穴が広がりきるのに合わせて、切り抜きの中に色が戻る */
+        .to(sticky, { '--opening-window-gray': 0, ease: 'none', duration: .32 }, .28);
 
       /* 全画面になってから一拍おいて、コンセプト文と送り出しへ */
       conceptStop = addHeroFinale(tlNarrow, finaleParts, HERO_FINALE.narrow);
@@ -792,10 +799,7 @@
   var BODY_MOTION = {
     parallaxBase: -3,        // 画像の基準位置(%)。CSS の --parallax-shift 既定値と揃える
     parallaxRange: 6,        // PC で動く幅(%)。人物写真の頭を切らない範囲に留める
-    parallaxRangeNarrow: 2.5,// 900px 以下で動く幅(%)
-    typeShift: 80,           // 背景英字が流れる量(px)
-    typeShiftNarrow: 36,
-    scrub: 0.9
+    parallaxRangeNarrow: 2.5 // 900px 以下で動く幅(%)
   };
 
   function scrollMotionReady() {
@@ -850,26 +854,16 @@
     });
   }
 
-  /* 背景の大きな英字。スクロールに合わせて横へゆっくり送るだけ */
-  function initTypeBands(root) {
-    initScrubVar(root, {
-      attr: 'data-typeband',
-      property: '--typeband-shift',
-      scrub: BODY_MOTION.scrub,
-      value: function (progress) {
-        var shift = isNarrow()
-          ? BODY_MOTION.typeShiftNarrow
-          : BODY_MOTION.typeShift;
-        return (-shift * progress).toFixed(1) + 'px';
-      }
-    });
-  }
 
   /* ------------------------------------------------------------------
      3. 記事: 本文生成
      ------------------------------------------------------------------ */
-  function buildFigure(block) {
-    var figure = el('figure', 'p-article__figure');
+  /* 単独の写真。本文に回り込ませるので、出てくる順に右・左と振り分ける
+     （CSS の nth-of-type だと、帯を挟んで本文のかたまりが分かれた時に
+     数え直しになってしまうため、ここで決める） */
+  function buildFigure(block, index) {
+    var figure = el('figure', 'p-article__figure' +
+      (index % 2 ? ' p-article__figure--left' : ''));
     figure.appendChild(imgEl(block.src, block.alt));
     if (block.alt) figure.appendChild(el('figcaption', 'p-article__caption', block.alt));
     return figure;
@@ -910,14 +904,35 @@
     return marquee;
   }
 
+  /* 本文。
+     単独の写真は本文に回り込ませたいので、読み幅のかたまり
+     （.p-article__text）の中に入れる。float はそのかたまりの中だけで効く。
+     連続した写真の帯（c-marquee）は記事幅いっぱいに出したいので、
+     かたまりを一度閉じてから外に置き、続きは新しいかたまりで組む */
   function buildBody(blocks) {
     var frag = document.createDocumentFragment();
+    var run = null;
     var images = [];
+    var figures = 0;      // 単独写真の通し番号。左右の振り分けに使う
+
+    function textRun() {
+      if (!run) {
+        run = el('div', 'p-article__text');
+        frag.appendChild(run);
+      }
+      return run;
+    }
 
     // 連続した写真をためて、途切れたところで吐き出す
     function flushImages() {
       if (!images.length) return;
-      frag.appendChild(images.length > 1 ? buildMarquee(images) : buildFigure(images[0]));
+      if (images.length > 1) {
+        frag.appendChild(buildMarquee(images));
+        run = null;                       // 帯の後ろは新しいかたまりから
+      } else {
+        textRun().appendChild(buildFigure(images[0], figures));
+        figures += 1;
+      }
       images = [];
     }
 
@@ -927,10 +942,9 @@
         return;
       }
       flushImages();
-      // 章の頭。ラベル → 中央寄せの見出し
+      // 章の頭。中央寄せの見出しで区切る
       if (block.type === 'h') {
-        frag.appendChild(el('p', 'p-article__label', 'MY STORY'));
-        frag.appendChild(el('h2', 'p-article__heading', block.text));
+        textRun().appendChild(el('h2', 'p-article__heading', block.text));
         return;
       }
       // 質問・回答（データが Q&A を持つ場合）
@@ -938,10 +952,10 @@
         var row = el('div', 'p-article__qa p-article__qa--' + block.type);
         row.appendChild(el('span', 'p-article__badge', block.type.toUpperCase()));
         row.appendChild(el('p', 'p-article__qa-text', block.text));
-        frag.appendChild(row);
+        textRun().appendChild(row);
         return;
       }
-      frag.appendChild(el('p', 'p-article__p', block.text));
+      textRun().appendChild(el('p', 'p-article__p', block.text));
     });
 
     flushImages();
@@ -1052,7 +1066,6 @@
       initReveal('.c-card, .p-voice__head, [data-reveal]');
       // VOICE は描画後にできるので、ここでスクロール演出を足す
       initParallaxScopes(container);
-      initTypeBands(container);
       // 記事から戻ってきたときは該当カードまで送る（描画後にハッシュを解決し直す）
       var hash = window.location.hash.slice(1);
       if (hash && SLUG_RE.test(hash)) {
@@ -1075,7 +1088,7 @@
       var article = window.FL_ARTICLE && window.FL_ARTICLE[slug];
       if (!article) throw new Error('not found');
       renderArticle(container, article);
-      initReveal('.p-article__head, .p-article__label, .p-article__heading, .p-article__p, .p-article__qa, .p-article__figure, .c-marquee, .p-article__back');
+      initReveal('.p-article__head, .p-article__heading, .p-article__p, .p-article__qa, .c-marquee, .p-article__back');
     }).catch(function () {
       fail(container, '記事「' + slug + '」を読み込めませんでした。');
     });
@@ -1110,7 +1123,6 @@
 
     // 静的に置いてある枠のぶん（VOICE 内は描画後に initIndexPage が呼ぶ）
     initParallaxScopes(document);
-    initTypeBands(document);
   }
 
   if (document.readyState === 'loading') {

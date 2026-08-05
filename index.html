@@ -82,8 +82,8 @@
       <section class="opening-hero" data-opening-hero>
         <div class="opening-hero__sticky">
           <!-- Hero の地。写真・覆い・照り返しをひとまとめにしてある。
-               締めでは切り抜きと一緒にこれごと持ち上げ、下から次の誌面の
-               地色を覗かせるので、まとめて動かせる入れ物が要る -->
+               sticky に直接置くと重ね順と座標がばらけるので、
+               まとめて扱える入れ物にしている -->
           <div class="opening-hero__backdrop" aria-hidden="true">
             <!-- 夜明けの海の写真。空も海もこれ1枚。
                  写真の水平線（画像の 67.3%）を CSS の --opening-horizon に
@@ -392,7 +392,6 @@
             />
           </h1>
 
-
           <!-- 放送のお知らせ。正円のシール。
                外周を文字が回り、中心に局名と本文を文字で置く。
                風景に切り替わる段で引く（main.js のタイムライン） -->
@@ -481,20 +480,31 @@
           <p class="c-error">記事一覧の表示には JavaScript が必要です。</p>
         </noscript>
       </div>
-
-      <!-- VOICE を締める帯。背景の誌面的なアクセント -->
-      <div
-        class="c-typeband c-typeband--divider"
-        data-typeband
-        aria-hidden="true"
-      >
-        <p class="c-typeband__text">SPOTLIGHT SHIZUOKA</p>
-      </div>
     </main>
 
     <footer class="l-footer">
       <div class="l-container l-footer__inner">
-        <p class="l-footer__station">
+        <p class="l-footer__logo">
+          <img
+            src="assets/img/logo.png"
+            alt="SPOTLIGHT SHIZUOKA"
+            width="1034"
+            height="569"
+          />
+        </p>
+
+        <nav class="l-footer__nav" aria-label="フッター">
+          <ul>
+            <li><a href="index.html">TOP</a></li>
+            <li><a href="index.html#group-01">VOICE</a></li>
+            <li><a href="contact.html">CONTACT</a></li>
+            <li><a href="privacy.html">POLICY</a></li>
+          </ul>
+        </nav>
+
+        <!-- 協力。ロゴは地色が焼き込まれた素材なので白の版に載せる -->
+        <div class="l-footer__station">
+          <p class="l-footer__station-label">協力</p>
           <a
             href="https://www.at-s.com/sbsradio/"
             target="_blank"
@@ -507,21 +517,8 @@
               loading="lazy"
               decoding="async"
           /></a>
-        </p>
-        <p class="l-footer__logo">
-          <img
-            src="assets/img/logo.png"
-            alt="SPOTLIGHT SHIZUOKA"
-            width="1034"
-            height="569"
-          />
-        </p>
-        <nav class="l-footer__nav" aria-label="フッター">
-          <ul>
-            <li><a href="contact.html">CONTACT</a></li>
-            <li><a href="privacy.html">POLICY</a></li>
-          </ul>
-        </nav>
+        </div>
+
         <p class="l-footer__copy">
           Copyright &copy; 2026 SPOTLIGHT SHIZUOKA. All Rights Reserved.
         </p>

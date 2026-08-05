@@ -228,18 +228,43 @@ body {
   );
 }
 
+/* 上から「サイトのロゴ → 案内 → 協力 → 著作表示」。
+   一定間隔で並べると4つが同じ重さに見えるので、
+   間の取り方で「主役・案内・添え物」の順に読ませる */
 .l-footer__inner {
   display: grid;
-  gap: 30px;
   justify-items: center;
   text-align: center;
 }
 
-/* 放送局は白の版に載せたロゴで置く（ヘッダー・ABOUT と同じ扱い） */
+/* 協力。案内から一本の線で切り離し、添え物として置く */
+.l-footer__station {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 52px;
+  padding-top: 44px;
+  border-top: 1px solid rgba(255, 255, 255, .16);
+}
+
+.l-footer__station-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  /* 字間を開けると最後の1文字ぶん左に寄るので、その分だけ戻す */
+  text-indent: .24em;
+  color: rgba(255, 255, 255, .58);
+}
+
+/* ロゴは地色が焼き込まれた素材なので、白の版に載せる
+   （ヘッダー・放送のお知らせの円と同じ扱い） */
 .l-footer__station a {
   display: inline-flex;
   align-items: center;
-  padding: 8px 14px;
+  padding: 12px 20px;
   background-color: var(--color-white);
   transition: opacity var(--dur) var(--ease);
 }
@@ -250,41 +275,82 @@ body {
 
 .l-footer__station img {
   width: auto;
-  height: 24px;
+  height: 44px;
 }
 
+/* このフッターの主役。他より一段大きく置く */
 .l-footer__logo img {
   width: auto;
-  height: 88px;
+  height: 124px;
+}
+
+.l-footer__nav {
+  margin-top: 34px;
 }
 
 .l-footer__nav ul {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 26px;
+  gap: 10px 34px;
 }
 
 .l-footer__nav a {
+  display: inline-block;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: .04em;
-  padding-block: 4px;
+  letter-spacing: .08em;
+  padding-block: 6px;
   border-bottom: 2px solid transparent;
-  transition: border-color var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
 .l-footer__nav a:hover {
   border-bottom-color: var(--color-blue-light);
+  color: var(--color-blue-light);
 }
 
 .l-footer__copy {
+  margin-top: 40px;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: .04em;
   color: rgba(255, 255, 255, .5);
+}
+
+/* 狭い画面。間を詰めて、案内は2列に折り返させる */
+@media (max-width: 600px) {
+  .l-footer {
+    padding-block: 44px 30px;
+  }
+
+  .l-footer__logo img {
+    height: 84px;
+  }
+
+  .l-footer__nav {
+    margin-top: 26px;
+  }
+
+  .l-footer__nav ul {
+    gap: 8px 24px;
+  }
+
+  .l-footer__station {
+    margin-top: 36px;
+    padding-top: 30px;
+  }
+
+  .l-footer__station img {
+    height: 36px;
+  }
+
+  .l-footer__copy {
+    margin-top: 28px;
+    font-size: 10px;
+  }
 }
 
 
@@ -621,44 +687,6 @@ body {
 }
 
 /* --------------------------------------------------------------
-   Component / typeband（背景に敷く大きな英字）
-   主役にしない。濃紺の細い輪郭だけで、誌面のアクセントとして置く。
-   スクロール量は main.js が --typeband-shift へ渡す
-   -------------------------------------------------------------- */
-.c-typeband {
-  overflow: hidden;
-  pointer-events: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.c-typeband__text {
-  width: max-content;
-  margin: 0;
-  white-space: nowrap;
-  font-family: var(--font-display);
-  font-size: clamp(80px, 15vw, 220px);
-  font-weight: 500;
-  line-height: .9;
-  letter-spacing: .02em;
-  margin-left: -3vw;   /* 端で見切れるところから始めて、誌面の一部に見せる */
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(11, 27, 46, .10);
-  transform: translateX(var(--typeband-shift, 0px));
-  will-change: transform;
-}
-
-/* セクションの切り替わりに置く帯 */
-.c-typeband--divider {
-  margin-top: 10vh;
-  padding-block: 2vh;
-}
-
-.c-typeband--divider .c-typeband__text {
-  font-size: clamp(60px, 11vw, 160px);
-}
-
-/* --------------------------------------------------------------
    Component / card（VOICE のカード）
    見せるのは人。企業ロゴは出さない。
    ・各グループの先頭（--lead）… 大きい枠。はじめからカラー
@@ -788,11 +816,17 @@ body {
   --opening-horizon: 72%;           /* 水平線の高さ。空と海、曙光の中心をここで揃える */
   --opening-onair-size: 200px;     /* 放送のお知らせの円の直径 */
   --opening-veil: .22;              /* 写真全体にかける暗さ。ここ1つで明暗を調整する */
-  --opening-photo-horizon: 67.3%;   /* 写真の中で水平線がある高さ。写真を替えたら測り直す */
+  --opening-contrast: 1.22;         /* 写真そのものの明暗の開き。上げるほど締まる */
+  --opening-saturate: 1.08;
+  --opening-photo-horizon: 63.3%;   /* 写真の中で水平線がある高さ。写真を替えたら測り直す */
   /* 写真をどこまで拡大して置くか。画面をどう覆うかと、
      手前にどこまで砂浜を入れるかがこれで決まる */
   --opening-scene-width: max(100vw, 205svh);
-  --opening-wave: 20px;             /* 照り返しの筋の周期。送る距離もこれと同じにする */
+  /* 照り返しの筋の周期。3層をそれぞれ 1 / 1.2 / 1.5 倍の周期にして
+     互いにずらし、規則的な櫛に見えないようにする。
+     送る距離は3つの最小公倍数（＝6倍）にすると、どの層も
+     ちょうど整数回ぶん進んで継ぎ目が出ない */
+  --opening-wave: 20px;
   --opening-beam-turn: 16s;         /* 光が一周する時間。ロゴの明滅もこれに乗せる */
   /* ランプから見たロゴの方角。画面比で 79〜86度に収まるので代表値を置く。
      光の始まりをこの角度の 90度手前にしてあるので、
@@ -860,6 +894,13 @@ body {
   transform: scale(var(--opening-image-scale));
   transform-origin: center center;
   will-change: transform;
+}
+
+/* 切り抜きの中は最初モノクロ。穴が全画面へ広がるのに合わせて色が戻る
+   （--opening-window-gray を main.js が 1 → 0 へ送る）。
+   演出のない状態では最初からカラー */
+.has-js .opening-window__image {
+  filter: grayscale(var(--opening-window-gray, 0));
 }
 
 /* 放送のお知らせ。正円のシール。
@@ -1019,6 +1060,8 @@ body {
   height: 100vh;          /* 古い Safari 向けの控え */
   height: 100svh;
   background-color: var(--color-navy);
+  /* 切り抜きの中の色。頭出しはモノクロで、main.js が 0 まで送る */
+  --opening-window-gray: 1;
 }
 
 /* Hero の地の入れ物。sticky と同じ大きさなので、中の要素の座標は変わらない。
@@ -1056,6 +1099,9 @@ body {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
+  /* 写真そのものの明暗を開く。上に重ねる覆いは平らな面なので、
+     こちらを締めないと空も海も同じ濃さに寄ってしまう */
+  filter: contrast(var(--opening-contrast)) saturate(var(--opening-saturate));
 }
 
 /* 写真の上のネイビー。上端はヘッダーと同じ色そのもので始めて一枚の面につなぎ、
@@ -1072,15 +1118,19 @@ body {
   background-image:
     /* ロゴの背後をもう一段落とす */
     radial-gradient(62% 36% at 50% 44%,
-      rgba(11, 27, 46, .42), transparent 80%),
+      rgba(11, 27, 46, .44), transparent 80%),
+    /* 水平線（72%）のあたりだけ覆いを薄くして曙光を抜き、
+       上の空と手前の砂浜は逆に沈める。平らに掛けると写真の
+       明暗がそのまま潰れるので、ここで山と谷を作る */
     linear-gradient(to bottom,
       var(--color-navy) 0,
-      rgba(11, 27, 46, .76) 11%,
-      rgba(11, 27, 46, .52) 30%,
-      rgba(11, 27, 46, .46) 50%,
-      rgba(11, 27, 46, .50) 66%,
-      rgba(9, 22, 38, .58) 80%,
-      rgba(5, 14, 26, .78) 100%),
+      rgba(11, 27, 46, .82) 11%,
+      rgba(11, 27, 46, .64) 30%,
+      rgba(11, 27, 46, .54) 50%,
+      rgba(11, 27, 46, .34) 66%,
+      rgba(11, 27, 46, .28) 74%,
+      rgba(9, 22, 38, .58) 84%,
+      rgba(5, 14, 26, .88) 100%),
     /* 全体の暗さ。調整はこの1つの変数だけで足りる */
     linear-gradient(
       rgba(4, 12, 24, var(--opening-veil)),
@@ -1116,8 +1166,7 @@ body {
    水平線から手前へ倒した面に乗せているので、奥へ向かって自然にすぼまり、
    粒も奥ほど詰まる（帯や階段には見えない）。
    面の左端は画面の -80% にあるので、灯台（画面の 13%）は
-   面の幅 260% のうち (13 + 80) / 260 ≒ 35.8% にあたる。
-   送るのは筋の周期ちょうどぶんなので、いつまで回しても継ぎ目は出ない */
+   面の幅 260% のうち (13 + 80) / 260 ≒ 35.8% にあたる */
 .has-js .opening-hero__sea::after {
   content: "";
   position: absolute;
@@ -1127,22 +1176,43 @@ body {
   height: 300%;
   transform-origin: 50% 0;
   will-change: transform;
-  filter: blur(1.1px);
+  filter: blur(2.2px);
+  /* 筋は帯ではなく「ふくらみ」。透明から立ち上がって山を作り、また透明へ
+     戻す形にして、端に線が出ないようにする。
+     3層は周期（1 / 1.2 / 1.5倍）も角度も違うので、重なりが場所ごとに
+     変わり、同じ並びが繰り返して見えない */
   background-image:
     repeating-linear-gradient(.4deg,
-      rgba(255, 241, 216, .95) 0 3px, transparent 3px var(--opening-wave)),
+      transparent 0,
+      rgba(255, 241, 216, .08) calc(var(--opening-wave) * .09),
+      rgba(255, 241, 216, .58) calc(var(--opening-wave) * .20),
+      rgba(255, 241, 216, .08) calc(var(--opening-wave) * .31),
+      transparent               calc(var(--opening-wave) * .44),
+      transparent               var(--opening-wave)),
     repeating-linear-gradient(-.62deg,
-      rgba(255, 226, 180, .65) 0 2px, transparent 2px var(--opening-wave));
-  -webkit-mask-image: radial-gradient(14% 48% at 35.8% 0,
-    #000, rgba(0, 0, 0, .64) 38%, transparent 78%);
-  mask-image: radial-gradient(14% 48% at 35.8% 0,
-    #000, rgba(0, 0, 0, .64) 38%, transparent 78%);
-  animation: opening-swell 9s linear infinite;
+      transparent 0,
+      rgba(255, 226, 180, .05) calc(var(--opening-wave) * .31),
+      rgba(255, 226, 180, .30) calc(var(--opening-wave) * .50),
+      rgba(255, 226, 180, .05) calc(var(--opening-wave) * .69),
+      transparent               calc(var(--opening-wave) * .89),
+      transparent               calc(var(--opening-wave) * 1.2)),
+    repeating-linear-gradient(1.05deg,
+      transparent 0,
+      rgba(206, 230, 255, .16) calc(var(--opening-wave) * .72),
+      transparent               calc(var(--opening-wave) * 1.29),
+      transparent               calc(var(--opening-wave) * 1.5));
+  -webkit-mask-image: radial-gradient(16% 52% at 35.8% 0,
+    #000, rgba(0, 0, 0, .58) 34%, rgba(0, 0, 0, .18) 62%, transparent 84%);
+  mask-image: radial-gradient(16% 52% at 35.8% 0,
+    #000, rgba(0, 0, 0, .58) 34%, rgba(0, 0, 0, .18) 62%, transparent 84%);
+  animation: opening-swell 54s linear infinite;
 }
 
+/* 送る距離は3層の周期の最小公倍数（20 / 24 / 30 の 6倍 = 120px）。
+   どの層も整数回ぶん進んで元に戻るので、繰り返しの継ぎ目が出ない */
 @keyframes opening-swell {
   from { transform: rotateX(72deg) translateY(0); }
-  to   { transform: rotateX(72deg) translateY(var(--opening-wave)); }
+  to   { transform: rotateX(72deg) translateY(calc(var(--opening-wave) * 6)); }
 }
 
 
@@ -1416,6 +1486,11 @@ body {
   transform: none;
 }
 
+/* 演出なし。色を戻す送りが走らないので最初からカラーで出す */
+.opening-hero.is-static .opening-window__image {
+  filter: none;
+}
+
 .opening-hero.is-static .opening-window {
   position: relative;
   right: auto;
@@ -1453,6 +1528,8 @@ body {
     height: auto;
     overflow: visible;
     background: none;
+    /* 色を戻す演出が走らないので、最初からカラーで出す */
+    --opening-window-gray: 0;
   }
 
   .has-js .opening-hero__sticky::before,
@@ -1659,24 +1736,44 @@ body {
   color: var(--color-sub);
 }
 
-/* 送りボタンは見出しの右端に小さく */
+/* 送り。地色に線1本だと押せることに気づかれないので、
+   濃紺で塗って「操作するもの」として立たせ、添え書きを付ける */
 .p-voice__nav {
   display: flex;
-  gap: 10px;
-  margin-left: auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+/* 添え書きはボタンの上に1行で置く（order:-1 と幅100%で先頭の行に回す） */
+.p-voice__nav-label {
+  order: -1;
+  flex-basis: 100%;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  line-height: 1.4;
+  color: var(--color-sub);
 }
 
 .p-voice__arrow {
   position: relative;
-  width: 40px;
-  height: 40px;
+  flex: none;
+  width: 52px;
+  height: 52px;
   padding: 0;
-  border: 1px solid var(--color-line-strong);
+  border: 0;
   border-radius: 999px;
-  background: none;
-  color: inherit;
+  background-color: var(--color-navy);
+  color: var(--color-white);
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  box-shadow: 0 6px 16px rgba(11, 27, 46, .22);
+  transition:
+    background-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
 }
 
 .p-voice__arrow::before {
@@ -1684,18 +1781,29 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 8px;
-  height: 8px;
-  border-top: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
 }
 
-.p-voice__arrow--prev::before { transform: translate(-40%, -50%) rotate(-135deg); }
-.p-voice__arrow--next::before { transform: translate(-60%, -50%) rotate(45deg); }
+.p-voice__arrow--left::before  { transform: translate(-35%, -50%) rotate(-135deg); }
+.p-voice__arrow--right::before { transform: translate(-65%, -50%) rotate(45deg); }
 
 .p-voice__arrow:hover:not(:disabled) {
-  border-color: var(--color-blue);
-  color: var(--color-blue);
+  background-color: var(--color-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 144, 232, .32);
+}
+
+.p-voice__arrow:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(11, 27, 46, .24);
+}
+
+.p-voice__arrow:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
 }
 
 .p-voice__arrow:disabled {
@@ -1874,8 +1982,7 @@ body {
   }
 
   .p-voice__nav {
-    margin-top: 10px;
-    margin-left: 0;
+    margin-top: 18px;
   }
 }
 
@@ -1990,6 +2097,12 @@ body {
 .p-voice--coming .p-voice__body,
 .p-voice--coming.p-voice--flip .p-voice__body {
   display: block;
+}
+
+/* 空き枠は中身が浅い。実グループと同じ「1画面ぶん」を確保すると
+   下に大きな余白が残るので、中身なりの高さに畳む */
+.p-voice--coming {
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -2164,12 +2277,18 @@ body {
 
 /* --------------------------------------------------------------
    Project / article（entry.html。main.js が中身を生成する）
-   構成は「人物ヘッダー → MY STORY → 中央見出し → 本文（Q&A可）」
+   構成は「人物ヘッダー → 中央見出し → 本文（Q&A可）」。
+   単独の写真は本文に回り込ませ、連続した写真は記事幅いっぱいの帯にする
    -------------------------------------------------------------- */
 .p-article {
   max-width: 1120px;
   /* ヘッダー直下に余白を持たせて詰まって見えないようにする */
   padding-block: 104px 12vh;
+  /* Q/A のバッジの大きさ。地の文もこのぶん下げて、
+     本文の頭を1本の線に揃える（揃っていないと段が変わって見える） */
+  --article-badge: 28px;
+  --article-badge-gap: 14px;
+  --article-indent: calc(var(--article-badge) + var(--article-badge-gap));
 }
 
 /* 頭は写真＝左 / 人物情報＝右 */
@@ -2266,27 +2385,20 @@ body {
   grid-column: full-start / full-end;
 }
 
-/* 章の頭に置くラベル */
-.p-article__label {
-  width: fit-content;
-  margin: 96px auto 0;
-  padding: 7px 26px;
-  border: 1px solid var(--color-blue);
-  border-radius: 999px;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .2em;
-  line-height: 1;
-  color: var(--color-blue);
+/* 読み幅のかたまり。写真の回り込みはこの中だけで効かせる。
+   最後に回り込みを解いておかないと、次のかたまりへ食い込む */
+.p-article__text::after {
+  content: "";
+  display: block;
+  clear: both;
 }
 
-.p-article__label:first-child {
-  margin-top: 0;
-}
-
+/* 章の頭。前の章と切り離したいので、回り込みも解いてから置く */
 .p-article__heading {
-  margin: 26px auto 44px;
+  clear: both;
+  margin: 96px auto 44px;
+  padding-top: 44px;
+  border-top: 1px solid var(--color-line-strong);
   font-size: clamp(19px, 2.2vw, 28px);
   font-weight: 700;
   line-height: 1.6;
@@ -2294,25 +2406,48 @@ body {
   text-align: center;
 }
 
+/* 記事の1本目だけは、上に何もないので罫も間も要らない。
+   「かたまりの先頭」で判定すると、写真の帯でかたまりが分かれた先の
+   見出しまで間が消えて帯に貼り付いてしまうので、
+   記事の先頭のかたまりに限る */
+.p-article__content > .p-article__text:first-child > .p-article__heading:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* 写真の帯の直後。帯そのものが区切りなので罫は重ねず、間だけ取る */
+.c-marquee + .p-article__text > .p-article__heading:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* 地の文。Q/A と頭を揃えるため、バッジぶん下げる */
 .p-article__p {
-  margin-top: 22px;
+  margin-top: 30px;
+  padding-left: var(--article-indent);
   font-weight: 400;
-  line-height: 2.25;
+  line-height: 2.05;
 }
 
 /* 質問と回答。データが type:"q" / "a" を持つときだけ出る */
 .p-article__qa {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 14px;
-  margin-top: 26px;
+  grid-template-columns: var(--article-badge) 1fr;
+  gap: var(--article-badge-gap);
+  margin-top: 38px;
+}
+
+/* 回答は質問の続きなので近づけ、次の問いとの間を空けて対にする */
+.p-article__qa--a {
+  margin-top: 18px;
 }
 
 .p-article__badge {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: var(--article-badge);
+  height: var(--article-badge);
   margin-top: 3px;
   font-family: var(--font-ui);
   font-size: 12px;
@@ -2331,7 +2466,7 @@ body {
 }
 
 .p-article__qa-text {
-  line-height: 2.1;
+  line-height: 2.05;
 }
 
 .p-article__qa--q .p-article__qa-text {
@@ -2342,14 +2477,38 @@ body {
   font-weight: 400;
 }
 
+/* 単独の写真は本文に回り込ませる。
+   出てくる順に右・左と振り分けて、片側に寄らないようにする */
 .p-article__figure {
-  margin-top: 40px;
+  float: right;
+  width: min(38%, 320px);
+  margin: 8px 0 30px 40px;
+}
+
+.p-article__figure--left {
+  float: left;
+  margin: 8px 40px 30px 0;
+}
+
+/* 後ろに本文が続かない写真は、回り込ませても横が空くだけ。
+   記事を締める1枚として幅いっぱいに置く
+   （::after は擬似要素なので :last-child の判定には入らない） */
+.p-article__text > .p-article__figure:last-child {
+  float: none;
+  width: 100%;
+  margin: 48px 0 0;
+}
+
+.p-article__figure img {
+  display: block;
+  width: 100%;
 }
 
 .p-article__caption {
   margin-top: 10px;
   font-size: 11px;
   font-weight: 400;
+  line-height: 1.8;
   color: var(--color-sub);
 }
 
@@ -2394,8 +2553,39 @@ body {
     margin-top: 52px;
   }
 
-  .p-article__label {
+  /* 幅がないので、バッジも頭を下げる量も詰める */
+  .p-article {
+    --article-badge: 22px;
+    --article-badge-gap: 10px;
+  }
+
+  .p-article__badge {
+    font-size: 10px;
+  }
+
+  .p-article__heading {
     margin-top: 68px;
+    padding-top: 34px;
+  }
+
+  .p-article__p {
+    margin-top: 24px;
+  }
+
+  .p-article__qa {
+    margin-top: 30px;
+  }
+
+  .p-article__qa--a {
+    margin-top: 14px;
+  }
+
+  /* 幅がないので回り込ませない。写真は1枚ずつ横いっぱいに置く */
+  .p-article__figure,
+  .p-article__figure--left {
+    float: none;
+    width: 100%;
+    margin: 34px 0;
   }
 }
 
@@ -2535,10 +2725,6 @@ body {
   /* スクロール連動はすべて止め、内容だけを見せる */
   .c-card__photo img {
     height: 100%;
-    transform: none;
-  }
-
-  .c-typeband__text {
     transform: none;
   }
 }
