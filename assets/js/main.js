@@ -904,6 +904,23 @@
     return marquee;
   }
 
+  /* 記事の締め。記事が「地の文 → 単独の写真」で終わるとき、その2つを
+     横並びの列として組む。
+     回り込み（float）にすると、締めの写真は本文よりずっと背が高いので
+     本文が尽きたあと横が丸ごと空いてしまう。列なら高さが合わなくても
+     並びとして成立する。
+     返すのは締めのかたまりが始まる位置。組めないときは -1 */
+  function closingStart(blocks) {
+    var last = blocks.length - 1;
+    if (last < 1 || blocks[last].type !== 'img') return -1;
+    // 写真が続くなら帯になるので対象外
+    if (blocks[last - 1].type === 'img') return -1;
+    var i = last - 1;
+    while (i >= 0 && blocks[i].type === 'p') i -= 1;
+    // 直前に地の文が1つもなければ並べる相手がいない
+    return i === last - 1 ? -1 : i + 1;
+  }
+
   /* 本文。
      単独の写真は本文に回り込ませたいので、読み幅のかたまり
      （.p-article__text）の中に入れる。float はそのかたまりの中だけで効く。
@@ -914,6 +931,10 @@
     var run = null;
     var images = [];
     var figures = 0;      // 単独写真の通し番号。左右の振り分けに使う
+
+    var closeAt = closingStart(blocks);
+    var closing = null;   // 締めの2列。始まったらここに入れる
+    var closingText = null;
 
     function textRun() {
       if (!run) {
@@ -929,6 +950,8 @@
       if (images.length > 1) {
         frag.appendChild(buildMarquee(images));
         run = null;                       // 帯の後ろは新しいかたまりから
+      } else if (closing) {
+        closing.appendChild(buildFigure(images[0], 0));
       } else {
         textRun().appendChild(buildFigure(images[0], figures));
         figures += 1;
@@ -936,7 +959,14 @@
       images = [];
     }
 
-    blocks.forEach(function (block) {
+    blocks.forEach(function (block, index) {
+      if (closeAt >= 0 && index === closeAt) {
+        closing = el('div', 'p-article__closing');
+        closingText = el('div', 'p-article__closing-text');
+        closing.appendChild(closingText);
+        textRun().appendChild(closing);
+      }
+
       if (block.type === 'img') {
         images.push(block);
         return;
@@ -955,7 +985,7 @@
         textRun().appendChild(row);
         return;
       }
-      textRun().appendChild(el('p', 'p-article__p', block.text));
+      (closingText || textRun()).appendChild(el('p', 'p-article__p', block.text));
     });
 
     flushImages();

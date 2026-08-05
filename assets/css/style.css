@@ -2490,8 +2490,30 @@ body {
   margin: 8px 40px 30px 0;
 }
 
-/* 後ろに本文が続かない写真は、回り込ませても横が空くだけ。
-   記事を締める1枚として幅いっぱいに置く
+/* 記事の締め。地の文と写真を横並びの列にする。
+   float だと写真のほうが背が高く、本文が尽きたあと横が空いてしまう */
+.p-article__closing {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 380px);
+  gap: 48px;
+  align-items: start;
+  margin-top: 30px;
+  clear: both;
+}
+
+.p-article__closing-text > .p-article__p:first-child {
+  margin-top: 0;
+}
+
+/* 列の中では回り込ませない。枠いっぱいに置く */
+.p-article__closing > .p-article__figure {
+  float: none;
+  width: 100%;
+  margin: 0;
+}
+
+/* 締めに組めなかった（地の文が続かない）写真は、回り込ませても
+   横が空くだけなので幅いっぱいで置く
    （::after は擬似要素なので :last-child の判定には入らない） */
 .p-article__text > .p-article__figure:last-child {
   float: none;
@@ -2586,6 +2608,16 @@ body {
     float: none;
     width: 100%;
     margin: 34px 0;
+  }
+
+  /* 締めも2列は入らないので、地の文の下に写真を置く */
+  .p-article__closing {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .p-article__closing > .p-article__figure {
+    margin: 30px 0 0;
   }
 }
 
