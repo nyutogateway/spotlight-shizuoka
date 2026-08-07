@@ -8,7 +8,7 @@
       name="description"
       content="静岡には、未来を創るリーダーがいる。地域を支える企業、新しい価値を生む挑戦者、まちをつなぐキーパーソン……その最前線に迫る20のストーリー。"
     />
-    <link rel="canonical" href="https://example.com/" />
+    <link rel="canonical" href="https://spotlight-shizuoka.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SPOTLIGHT SHIZUOKA" />
     <meta property="og:title" content="SPOTLIGHT SHIZUOKA" />
@@ -16,11 +16,16 @@
       property="og:description"
       content="静岡には、未来を創るリーダーがいる。その最前線に迫る20のストーリー。"
     />
+    <!-- OGP 画像は絶対 URL でないと拾われない。1200x630 -->
     <meta
       property="og:image"
-      content="https://example.com/assets/img/ogp.jpg"
+      content="https://spotlight-shizuoka.com/assets/img/ogp.jpg"
     />
-    <meta property="og:url" content="https://example.com/" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SPOTLIGHT SHIZUOKA" />
+    <meta property="og:url" content="https://spotlight-shizuoka.com/" />
+    <meta property="og:locale" content="ja_JP" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#0B1B2E" />
     <link rel="icon" href="assets/img/favicon.png" type="image/png" />
@@ -40,15 +45,8 @@
       href="assets/img/logo.png"
       fetchpriority="high"
     />
-    <!-- Hero の地。最初の1画面をこれ1枚で覆う -->
+    <!-- Hero の地。切り抜きの中も同じ1枚なので、これだけ先に取りに行く -->
     <link rel="preload" as="image" href="assets/img/hero_sky.jpg" />
-    <link
-      rel="preload"
-      as="image"
-      href="assets/img/hero-fuji-tea.webp"
-      imagesrcset="assets/img/hero-fuji-tea.webp 1600w, assets/img/hero-fuji-tea-2x.webp 2600w"
-      imagesizes="100vw"
-    />
 
     <!-- スクロール演出用の配置は JS が使える環境にだけ適用する（下記CSS参照） -->
     <script>
@@ -430,6 +428,9 @@
 
           <!-- 紙面を切り抜いた穴。最後は全画面の風景になる -->
           <div class="opening-window">
+            <!-- 演出時はこの中身を使わない（背後の風景を県の形で抜いて
+                 モノクロにする / CSS 参照）。JS なし・モーション低減の
+                 縦積みでだけ出るので、遅延読み込みにしてある -->
             <div class="opening-window__visual">
               <img
                 class="opening-window__image"
@@ -442,6 +443,7 @@
                 alt=""
                 width="1600"
                 height="1067"
+                loading="lazy"
                 decoding="async"
               />
             </div>

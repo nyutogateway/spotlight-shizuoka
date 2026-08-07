@@ -803,10 +803,15 @@ body {
    ・調整値は下の :root にまとめてある。
    -------------------------------------------------------------- */
 :root {
-  --opening-scroll-length: 240svh;  /* Hero のスクロール距離。scrub で流れるように追従する */
+  /* Hero のスクロール距離。scrub で流れるように追従する。
+     コンセプト文を1文字ずつ打つぶんの距離もここから取っている */
+  --opening-scroll-length: 340svh;
   --opening-side: 7vw;              /* Hero の左右余白 */
-  --opening-logo-width: min(52vw, 700px, 84svh);   /* 平たい画面では高さでも抑える */
+  /* 最初のロゴの大きさ。画面の横幅に対する割合だけで決める。
+     px や svh で頭打ちにすると、画面が広いほど相対的に小さく見えてしまう */
+  --opening-logo-width: 52%;
   --opening-window-width: min(25vw, 43svh);
+  --opening-window-veil: .22;       /* 切り抜きにかける光の膜。上げるほど県の形が立つ */
   --opening-window-ratio: 1.31;      /* 静岡県の実際の縦横比。画面比で歪ませない */
   --opening-window-bleed-x: 4vw;    /* 右の余白 */
   --opening-window-bleed-y: 4svh;   /* 下の余白 */
@@ -896,11 +901,33 @@ body {
   will-change: transform;
 }
 
-/* 切り抜きの中は最初モノクロ。穴が全画面へ広がるのに合わせて色が戻る
-   （--opening-window-gray を main.js が 1 → 0 へ送る）。
-   演出のない状態では最初からカラー */
-.has-js .opening-window__image {
-  filter: grayscale(var(--opening-window-gray, 0));
+/* 演出時の切り抜きは、別の写真を貼るのではなく「背後の風景を県の形で
+   抜いてモノクロにする」。別画像だと画面内の位置がずれて、風景から
+   浮いた別の窓に見えてしまうため。
+   backdrop-filter なので位置合わせは要らず、必ず背景と重なる。
+   色は穴が全画面へ広がるのに合わせて戻る（main.js が 1 → 0 へ送る） */
+.has-js .opening-window {
+  /* 夜の海はほとんど黒なので、brightness の掛け算では持ち上がらない。
+     薄い光の膜を重ねて形が読めるところまで起こす。
+     濃さは --opening-window-gray に掛けてあるので、
+     色が戻りきったところで膜もちょうど消える */
+  background-color: rgba(210, 232, 255, calc(var(--opening-window-gray, 0) * var(--opening-window-veil)));
+  -webkit-backdrop-filter:
+    grayscale(var(--opening-window-gray, 0))
+    contrast(calc(1 + var(--opening-window-gray, 0) * .30))
+    brightness(calc(1 + var(--opening-window-gray, 0) * .30));
+  backdrop-filter:
+    grayscale(var(--opening-window-gray, 0))
+    contrast(calc(1 + var(--opening-window-gray, 0) * .30))
+    brightness(calc(1 + var(--opening-window-gray, 0) * .30));
+  /* 形の外側へ光をこぼす。clip-path のあとに掛かるので、
+     四角ではなく県の輪郭に沿ってにじむ */
+  filter: drop-shadow(0 0 26px rgba(150, 200, 255, calc(var(--opening-window-gray, 0) * .55)));
+}
+
+/* 中の写真は使わない。演出なしの縦積み（.is-static）でだけ出す */
+.has-js .opening-hero:not(.is-static) .opening-window__visual {
+  display: none;
 }
 
 /* 放送のお知らせ。正円のシール。
@@ -1041,6 +1068,40 @@ body {
   font-weight: 400;
   line-height: 2.3;
   letter-spacing: .06em;
+}
+
+/* タイプライター。main.js が1文字ずつの入れ物に割る。
+   入れ物は最初から場所を取っているので、打つあいだ行が伸び縮みせず、
+   中央寄せの組みが揺れない。透過が掛かるのは中の字だけ */
+.opening-hero__concept-char {
+  position: relative;
+}
+
+/* 中の字。打たれるまで伏せておく（入れ物は場所を取ったまま） */
+.has-js .opening-hero__concept-char > span {
+  opacity: 0;
+}
+
+.has-js .opening-hero__concept-char.is-typed > span {
+  opacity: 1;
+}
+
+/* 打っている位置の縦棒。字と一緒に透明にならないよう入れ物側に出す */
+.opening-hero__concept-char.is-typing::after {
+  content: "";
+  position: absolute;
+  right: -.08em;
+  top: .26em;
+  width: 2px;
+  height: 1.05em;
+  background-color: var(--color-lime);
+  box-shadow: 0 0 10px rgba(227, 230, 72, .7);
+  animation: opening-caret .86s steps(1, end) infinite;
+}
+
+@keyframes opening-caret {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 /* ---- 演出用の配置（JS が使える環境だけ）---- */
@@ -1583,9 +1644,9 @@ body {
 
 @media (max-width: 900px) {
   :root {
-    --opening-scroll-length: 190svh;
+    --opening-scroll-length: 270svh;
     --opening-side: var(--container-pad);
-    --opening-logo-width: min(88vw, 440px, 50svh);
+    --opening-logo-width: 88%;
     --opening-window-width: min(44vw, 25svh);
     --opening-window-bleed-x: 5vw;
     --opening-window-bleed-y: 4svh;

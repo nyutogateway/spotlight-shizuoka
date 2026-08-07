@@ -18,6 +18,10 @@
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var SLUG_RE = /^[a-z0-9_-]+$/i;
 
+  /* 公開先。canonical / og:url を記事ごとに組み立てるのに使う。
+     各 HTML の <head> に書いてある値と揃えること */
+  var SITE_ORIGIN = 'https://spotlight-shizuoka.com/';
+
   /* 縦積みに切り替える境目。CSS の @media と揃えること */
   var NARROW_MAX = 900;
   var MQ_WIDE = '(min-width: ' + (NARROW_MAX + 1) + 'px)';
@@ -445,14 +449,16 @@
     headerLogoAt: 0.46       // ここを超えたらヘッダーのロゴを出す（タイムライン進捗の割合）
   };
 
-  /* コンセプトを読み終えてから Hero を抜けるまでの間 */
-  var HERO_READ_HOLD = .18;
+  /* コンセプトが出そろってから Hero を抜けるまでの間。
+     ここが短いと、出そろった位置＝ほぼ終点になってしまい、
+     ひと押しで通り過ぎる（読む前に飛び出す）。
+     snap の止め位置も終点に近づきすぎて、2つの止め位置が食い合う */
+  var HERO_READ_HOLD = .60;
 
   /* Hero の締め（放送のお知らせ→覆い→コンセプト文）の timeline 上の
      位置と量。PC と狭い画面で数値だけが違うので表にしてある。
      ・at*      : timeline 上の位置
-     ・rise     : コンセプト1行が下から上がってくる量(px)
-     ・stagger  : 1行ずつの間隔（大きいほどゆっくり出る）
+     ・type     : コンセプト文を打ち終わるまでの長さ
 
      以前は終盤に風景ごと持ち上げて下から地色を覗かせていたが、
      止まる位置がちょうど持ち上げきったところで、風景の下に地色の帯が
@@ -460,14 +466,61 @@
      外れて風景ごと上へ流れるので、送り出しはそれで足りる */
   var HERO_FINALE = {
     wide: {
-      atOnair: .74, atOverlay: .88, atConcept: .92, atLines: .96,
-      rise: 22, stagger: .14, lines: .20
+      atOnair: .74, atOverlay: .88, atConcept: .92, atLines: .96, type: 2.40
     },
     narrow: {
-      atOnair: .58, atOverlay: .70, atConcept: .74, atLines: .78,
-      rise: 18, stagger: .11, lines: .18
+      atOnair: .58, atOverlay: .70, atConcept: .74, atLines: .78, type: 2.00
     }
   };
+
+  /* コンセプト文を1文字ずつに割る。スクロールに合わせて打っていくため。
+     ・外側の枠は最初から出しておき、中の字だけを出す。枠の位置が動かないので
+       打つあいだ行が伸び縮みせず、中央寄せの組みが揺れない
+     ・打っている位置の縦棒（カーソル）は外側の枠に出す。中の字と一緒に
+       透明にならないよう、透過を掛けるのは中の字だけにしてある
+     ・読み上げには元の文をそのまま渡し、割った字は読ませない */
+  function splitIntoChars(lines) {
+    var chars = [];
+    var glyphs = [];
+
+    Array.prototype.forEach.call(lines, function (line) {
+      var text = line.textContent.trim();
+      line.setAttribute('aria-label', text);
+      clear(line);
+
+      text.split('').forEach(function (ch) {
+        var box = el('span', 'opening-hero__concept-char');
+        box.setAttribute('aria-hidden', 'true');
+        var glyph = el('span', null, ch);
+        box.appendChild(glyph);
+        line.appendChild(box);
+        chars.push(box);
+        glyphs.push(glyph);
+      });
+    });
+
+    return { chars: chars, glyphs: glyphs };
+  }
+
+  /* 打てた割合から「何文字目まで出すか」を決めて塗り分ける。
+     毎フレーム全部を触らないよう、前回との差だけを書き換える */
+  function paintTyped(chars, typed) {
+    var count = Math.round(typed.at * chars.length);
+    if (count === typed.painted) return;
+
+    var from = Math.min(count, typed.painted || 0);
+    var to = Math.max(count, typed.painted || 0);
+    for (var i = from; i < to; i++) {
+      chars[i].classList.toggle('is-typed', i < count);
+    }
+
+    // 打っている位置の縦棒。打ち終わりと頭出しでは消す
+    if (chars[typed.caret]) chars[typed.caret].classList.remove('is-typing');
+    typed.caret = (count > 0 && count < chars.length) ? count - 1 : -1;
+    if (chars[typed.caret]) chars[typed.caret].classList.add('is-typing');
+
+    typed.painted = count;
+  }
 
   /* 切り抜きが最後に寄っていく形。紙面から切り抜いた穴（CSS の
      .opening-window の clip-path）と同じ点数のまま矩形へ寄せて、
@@ -483,34 +536,40 @@
   }
 
   /* 全画面の風景になったあとの締め。PC と狭い画面で共通の組み立て。
-     放送のお知らせを引き、覆いをかけてコンセプト文を1行ずつ読ませる。
+     放送のお知らせを引き、覆いをかけてコンセプト文を打っていく。
      風景は最後まで画面いっぱいのまま置き、送り出しは Hero を抜けた
      ところで sticky が外れるのに任せる（下に地色の帯を作らない）。
      timeline に足すだけで ScrollTrigger は増やさない。
      戻り値は snap の止め位置（進捗の割合） */
   function addHeroFinale(tl, parts, at) {
+    var chars = parts.conceptChars;
+    var typed = { at: 0 };      // 打てた割合。timeline はこれ1つだけを送る
+
     tl
       /* ここから先はコンセプト文を読ませる段。ヘッダーが地を取り戻すと
          札の上を帯が横切ってしまうので、放送のお知らせは引く */
       .to(parts.onair, { opacity: 0, ease: 'none', duration: .12 }, at.atOnair)
 
-      /* 風景の上でコンセプト文を1行ずつ、ゆっくり読ませる */
+      /* 風景の上に覆いをかけてから、文字を打ちはじめる */
       .to(parts.overlay, {
         opacity: HERO_SETTINGS.overlayOpacity, ease: 'none', duration: .16
       }, at.atOverlay)
       .set(parts.concept, { opacity: 1 }, at.atConcept)
-      .fromTo(parts.conceptLines,
-        { opacity: 0, y: at.rise },
-        {
-          opacity: 1,
-          y: 0,
-          stagger: at.stagger,
-          ease: 'power2.out',
-          duration: at.lines
-        }, at.atLines);
 
-    /* コンセプトが出そろった位置。ここが snap の止め位置になる。
-       行数はデータ側で変わりうるので、実際の長さから取る */
+      /* タイプライター。1つの数値を 0→1 へ送り、そこから「何文字目まで
+         打てたか」を出してクラスで切り替える。
+         stagger 付きの tween を 73個の字に掛けると、再生前の状態が
+         巻き戻しで正しく戻らず、頭出しから全文が出てしまう。
+         数値1本なら行きも戻りも同じ式で決まる */
+      .to(typed, {
+        at: 1,
+        duration: at.type,
+        ease: 'none',
+        onUpdate: function () { paintTyped(chars, typed); }
+      }, at.atLines);
+
+    /* 打ち終わった位置。ここが snap の止め位置になる。
+       文字数はデータ側で変わりうるので、実際の長さから取る */
     var settled = tl.duration();
 
     /* 読む時間。ここを過ぎると Hero を抜けて、風景ごと上へ流れる */
@@ -697,8 +756,13 @@
     }
 
     /* 締めの共通部分に渡す顔ぶれ */
+    /* コンセプト文を1文字ずつに割る。演出が動くと決まったここで初めて割り、
+       演出しない環境（上で return 済み）では元の文のまま残す */
+    var split = splitIntoChars(conceptLines);
+
     var finaleParts = {
-      overlay: overlay, concept: concept, conceptLines: conceptLines, onair: onair
+      overlay: overlay, concept: concept, onair: onair,
+      conceptChars: split.chars, conceptGlyphs: split.glyphs
     };
 
     var media = gsap.matchMedia();
@@ -706,8 +770,11 @@
     /* PC。中央から左に大きなロゴ、右下に切り抜き。
        切り抜きが全画面まで広がり、そのまま風景の中に入る */
     media.add(MQ_WIDE, function () {
-      gsap.set(logo, { yPercent: -50 });
-      gsap.set(concept, { xPercent: -50, yPercent: -50 });
+      /* CSS の translate(-50%,-50%) は、GSAP が触る時点で px に解決済み。
+         そこへ yPercent を足すと中央寄せが二重に掛かって半分ぶん上へずれる。
+         x/y を 0 に戻したうえで割合だけを持たせ、GSAP に一本化する */
+      gsap.set(logo, { xPercent: -50, yPercent: -50, x: 0, y: 0 });
+      gsap.set(concept, { xPercent: -50, yPercent: -50, x: 0, y: 0 });
 
       var tl = timeline();
 
@@ -758,7 +825,7 @@
 
     /* 画面が狭いときは短く。ロゴの下の切り抜きが全画面まで伸びるだけにする */
     media.add(MQ_NARROW, function () {
-      gsap.set(concept, { xPercent: -50, yPercent: -50 });
+      gsap.set(concept, { xPercent: -50, yPercent: -50, x: 0, y: 0 });
 
       var tlNarrow = timeline();
 
@@ -990,8 +1057,31 @@
     return frag;
   }
 
+  /* 記事ごとのメタ。head に置いた共通の値を、描いた記事のもので上書きする。
+     SNS のカードはクロール時に JS を動かさないので共通のままだが、
+     JS を実行する側（検索エンジンや一部のツール）には正しい値が渡る */
+  function updateArticleMeta(article) {
+    var url = SITE_ORIGIN + 'entry.html?slug=' + encodeURIComponent(article.slug);
+    var title = article.company + ' ' + article.person + ' ｜ SPOTLIGHT SHIZUOKA';
+    var desc = article.profile || article.title || '';
+
+    document.title = title;
+
+    function meta(selector, value) {
+      var node = document.head.querySelector(selector);
+      if (node && value) node.setAttribute('content', value);
+    }
+    meta('meta[name="description"]', desc);
+    meta('meta[property="og:title"]', title);
+    meta('meta[property="og:description"]', desc);
+    meta('meta[property="og:url"]', url);
+
+    var canonical = document.head.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', url);
+  }
+
   function renderArticle(container, article) {
-    document.title = article.company + ' ' + article.person + ' ｜ SPOTLIGHT SHIZUOKA';
+    updateArticleMeta(article);
 
     // 頭は「写真＝左／人物情報＝右」の2段組
     var head = el('header', 'p-article__head');
