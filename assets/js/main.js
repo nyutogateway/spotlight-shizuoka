@@ -514,9 +514,10 @@
       chars[i].classList.toggle('is-typed', i < count);
     }
 
-    // 打っている位置の縦棒。打ち終わりと頭出しでは消す
+    /* 打っている位置の縦棒。打ち終わったあとも最後の字の横に置いたままにして、
+       点滅させておく。消すのは1文字も出ていないときだけ */
     if (chars[typed.caret]) chars[typed.caret].classList.remove('is-typing');
-    typed.caret = (count > 0 && count < chars.length) ? count - 1 : -1;
+    typed.caret = count > 0 ? count - 1 : -1;
     if (chars[typed.caret]) chars[typed.caret].classList.add('is-typing');
 
     typed.painted = count;
