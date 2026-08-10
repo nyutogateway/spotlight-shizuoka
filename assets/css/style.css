@@ -618,6 +618,7 @@ body {
 .c-drawer.is-open .c-drawer__menu li:nth-child(1) { transition-delay: .06s; }
 .c-drawer.is-open .c-drawer__menu li:nth-child(2) { transition-delay: .12s; }
 .c-drawer.is-open .c-drawer__menu li:nth-child(3) { transition-delay: .18s; }
+.c-drawer.is-open .c-drawer__menu li:nth-child(4) { transition-delay: .24s; }
 
 .c-drawer__label {
   margin-bottom: 24px;
@@ -681,9 +682,90 @@ body {
   color: var(--color-blue-light);
 }
 
+/* ドロワーの足回り。フッターと同じ顔ぶれを、同じ扱いで並べる */
+.c-drawer__foot {
+  margin-top: 72px;
+  padding-top: 44px;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+}
+
+.c-drawer__foot-logo img {
+  width: auto;
+  height: 76px;
+}
+
+.c-drawer__station {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.c-drawer__station-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  /* 字間を開けると最後の1文字ぶん左に寄るので、その分だけ戻す */
+  text-indent: .24em;
+  color: rgba(255, 255, 255, .58);
+}
+
+/* ロゴは地色が焼き込まれた素材なので、白の版に載せる（フッターと同じ扱い） */
+.c-drawer__station a {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: var(--color-white);
+  transition: opacity var(--dur) var(--ease);
+}
+
+.c-drawer__station a:hover {
+  opacity: .78;
+}
+
+.c-drawer__station img {
+  width: auto;
+  height: 32px;
+}
+
+.c-drawer__copy {
+  margin-top: 28px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: rgba(255, 255, 255, .45);
+}
+
 /* ドロワーを開いている間は背面を固定する */
 .is-drawer-open {
   overflow: hidden;
+}
+
+/* 狭い画面では記事一覧を出さない。20 件が縦に伸びると
+   本来の行き先である MENU がその上に埋もれてしまう。
+   一覧が消えて主役が 3 つだけになるので、横並びをやめて縦に積む */
+@media (max-width: 900px) {
+  .c-drawer__section--articles {
+    display: none;
+  }
+
+  .c-drawer__menu {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 一覧が消えて中身が短くなるので、足回りは下端へ送る。
+     内側を画面の高さいっぱいに伸ばしたうえで auto の余白で押し下げる */
+  .c-drawer__inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  .c-drawer__foot {
+    margin-top: auto;
+  }
 }
 
 /* --------------------------------------------------------------

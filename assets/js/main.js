@@ -103,11 +103,49 @@
   /* ------------------------------------------------------------------
      1-2. ハンバーガーメニュー
      ------------------------------------------------------------------ */
+  /* フッターの並びと揃える。VOICE の行き先も同じく最初のグループ */
   var SITE_LINKS = [
     ['TOP', 'index.html'],
+    ['VOICE', 'index.html#group-01'],
     ['CONTACT', 'contact.html'],
     ['POLICY', 'privacy.html']
   ];
+
+  /* ドロワーの足回り。フッターと同じ顔ぶれ（ロゴ・協力・著作権表示）を
+     並べて、メニューだけでは間延びする下半分を締める */
+  function buildDrawerFoot() {
+    var foot = el('div', 'c-drawer__foot');
+
+    var logo = el('p', 'c-drawer__foot-logo');
+    logo.appendChild(img('assets/img/logo.png', 'SPOTLIGHT SHIZUOKA', 1034, 569));
+    foot.appendChild(logo);
+
+    var station = el('div', 'c-drawer__station');
+    station.appendChild(el('p', 'c-drawer__station-label', '協力'));
+    var link = el('a');
+    link.href = 'https://www.at-s.com/sbsradio/';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.appendChild(img('assets/img/sbs_logo.png', 'SBSラジオ', 144, 96));
+    station.appendChild(link);
+    foot.appendChild(station);
+
+    foot.appendChild(el('p', 'c-drawer__copy',
+      'Copyright © 2026 SPOTLIGHT SHIZUOKA. All Rights Reserved.'));
+
+    return foot;
+  }
+
+  function img(src, alt, width, height) {
+    var node = document.createElement('img');
+    node.src = src;
+    node.alt = alt;
+    node.width = width;
+    node.height = height;
+    node.loading = 'lazy';
+    node.decoding = 'async';
+    return node;
+  }
 
   function buildHamburger() {
     var button = el('button', 'c-hamburger');
@@ -143,10 +181,14 @@
     siteSection.appendChild(menu);
     inner.appendChild(siteSection);
 
-    // 記事一覧。entries.js が読めていないページでは出さない
+    /* 記事一覧。広い画面でだけ出す（狭い画面では 20 件が縦に伸びて
+       MENU が埋もれるので CSS で隠す）。
+       entries.js が読めていないページでは組まない */
     if (window.FL_ENTRIES && window.FL_ENTRIES.groups) {
-      var articleSection = el('section', 'c-drawer__section');
-      articleSection.appendChild(el('p', 'c-drawer__label', 'ARTICLES'));
+      var articleSection = el('section', 'c-drawer__section c-drawer__section--articles');
+      /* 見出しは出さない。区切り線の下に企業名が並べば一覧だと分かる。
+         読み上げには要るので名前だけ残す */
+      articleSection.setAttribute('aria-label', 'ARTICLES');
       var list = el('ul', 'c-drawer__list');
 
       window.FL_ENTRIES.groups.forEach(function (group) {
@@ -164,6 +206,8 @@
       articleSection.appendChild(list);
       inner.appendChild(articleSection);
     }
+
+    inner.appendChild(buildDrawerFoot());
 
     drawer.appendChild(inner);
     return drawer;

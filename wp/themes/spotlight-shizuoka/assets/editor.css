@@ -1,0 +1,44 @@
+/* 編集画面だけの当たり。表示側の style.css は読み込まないので、
+   Q&A のバッジなど「入力中に構造が分かる」ぶんだけを持たせる */
+
+.spot-qa {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  margin-block: 22px;
+}
+
+.spot-qa__badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background-color: #0090e8;
+}
+
+.spot-qa--a .spot-qa__badge {
+  color: #0b1b2e;
+  background-color: #bdc6ce;
+}
+
+.spot-qa p {
+  margin: 0;
+  line-height: 2.05;
+}
+
+.spot-band {
+  padding: 18px;
+  border: 1px dashed #bdc6ce;
+  background-color: rgba(255, 255, 255, .5);
+}
+
+.spot-band__note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #63717d;
+}

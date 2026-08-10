@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "spotlight/photo-band",
+  "title": "写真の帯",
+  "category": "media",
+  "icon": "images-alt2",
+  "description": "写真を横に並べて途切れずに流す帯。2枚以上で流れる。",
+  "textdomain": "spotlight",
+  "attributes": {
+    "ids": { "type": "array", "default": [], "items": { "type": "number" } }
+  },
+  "supports": { "html": false },
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

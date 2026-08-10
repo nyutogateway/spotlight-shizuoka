@@ -1,0 +1,407 @@
+<?php
+/**
+ * Hero。静的サイトの index.html からそのまま持ってきている。
+ * 演出は assets/js/main.js の initOpeningHero() が組み立てるので、
+ * ここは器だけ。文言を変えるときは JS 側の前提（コンセプト文の行割りなど）
+ * に触れないか確認すること。
+ *
+ * @package spotlight-shizuoka
+ */
+?>
+<section class="opening-hero" data-opening-hero>
+  <div class="opening-hero__sticky">
+    <!-- Hero の地。写真・覆い・照り返しをひとまとめにしてある。
+         sticky に直接置くと重ね順と座標がばらけるので、
+         まとめて扱える入れ物にしている -->
+    <div class="opening-hero__backdrop" aria-hidden="true">
+      <!-- 月夜の海の写真。空も海もこれ1枚。
+           写真の水平線（画像の 63.4%）を CSS の --opening-horizon に
+           合わせて置いてあるので、灯台は必ず水平線に足を置く -->
+      <div class="opening-hero__scene" aria-hidden="true"></div>
+
+      <!-- 写真の上にかけるネイビー。上端はヘッダーと同じ色で始めて
+           一枚の面としてつなぎ、ロゴと足元は読めるところまで沈める -->
+      <div class="opening-hero__veil" aria-hidden="true"></div>
+
+      <!-- 灯台の光が海面に落とす道。水平線から手前へ倒した面に乗せて、
+           奥へ向かってすぼまるようにしてある（CSS の perspective） -->
+      <div class="opening-hero__sea" aria-hidden="true"></div>
+    </div>
+
+    <!-- SPOTLIGHT の名にちなむ光芒と、その中に舞う微光の粒子。
+         灯台の本体と同じく、スクロールでは消さずに灯り続ける -->
+    <div class="opening-hero__aura" aria-hidden="true">
+      <span class="opening-hero__beam"></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 7.2%;
+          --y: 60.4%;
+          --s: 4.6px;
+          --d: 13.6s;
+          --delay: -4.8s;
+          --drift: -27px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 77.3%;
+          --y: 58.8%;
+          --s: 1.9px;
+          --d: 11s;
+          --delay: -2.9s;
+          --drift: -11px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 45.8%;
+          --y: 17.1%;
+          --s: 4.6px;
+          --d: 11.2s;
+          --delay: -2.1s;
+          --drift: -16px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 26.2%;
+          --y: 22.3%;
+          --s: 2.3px;
+          --d: 10s;
+          --delay: -7.8s;
+          --drift: -13px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 70.4%;
+          --y: 66.1%;
+          --s: 4.6px;
+          --d: 10.6s;
+          --delay: -4.8s;
+          --drift: -31px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 17.3%;
+          --y: 28.8%;
+          --s: 3.8px;
+          --d: 14.7s;
+          --delay: -8s;
+          --drift: -15px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 35.8%;
+          --y: 14%;
+          --s: 2.9px;
+          --d: 11.7s;
+          --delay: -4.2s;
+          --drift: -15px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 39.6%;
+          --y: 50.5%;
+          --s: 3.5px;
+          --d: 10.1s;
+          --delay: -3s;
+          --drift: -26px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 66.8%;
+          --y: 34.2%;
+          --s: 2.7px;
+          --d: 10.1s;
+          --delay: -1.4s;
+          --drift: -26px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 70.7%;
+          --y: 14%;
+          --s: 3.1px;
+          --d: 14.5s;
+          --delay: -4.6s;
+          --drift: -18px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 19.7%;
+          --y: 37.1%;
+          --s: 2.1px;
+          --d: 10.6s;
+          --delay: -11.6s;
+          --drift: -19px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 71%;
+          --y: 10.3%;
+          --s: 2px;
+          --d: 9.2s;
+          --delay: -1.1s;
+          --drift: -30px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 71.2%;
+          --y: 64.3%;
+          --s: 4.7px;
+          --d: 14.6s;
+          --delay: -6.5s;
+          --drift: -22px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 4.8%;
+          --y: 85.7%;
+          --s: 2.4px;
+          --d: 12.8s;
+          --delay: -2s;
+          --drift: -17px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 19%;
+          --y: 46.4%;
+          --s: 2.4px;
+          --d: 8.6s;
+          --delay: -6.7s;
+          --drift: -26px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 85.5%;
+          --y: 38.6%;
+          --s: 3.3px;
+          --d: 10.2s;
+          --delay: -8.2s;
+          --drift: -25px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 91.4%;
+          --y: 66.3%;
+          --s: 2.4px;
+          --d: 12.1s;
+          --delay: -9.6s;
+          --drift: -12px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 76.3%;
+          --y: 84.8%;
+          --s: 2.5px;
+          --d: 11.1s;
+          --delay: -0s;
+          --drift: -30px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 45.4%;
+          --y: 26.1%;
+          --s: 2.1px;
+          --d: 14.6s;
+          --delay: -6.6s;
+          --drift: -20px;
+        "
+      ></span>
+      <span
+        class="opening-hero__mote"
+        style="
+          --x: 62.1%;
+          --y: 16%;
+          --s: 2.5px;
+          --d: 9.4s;
+          --delay: -3.8s;
+          --drift: -10px;
+        "
+      ></span>
+    </div>
+
+    <!-- 夜明けの海に立つ灯台。塔は影のまま、灯室だけが灯る。
+         光（aura）と違ってスクロールで引かせない。塔はそこに在り続け、
+         最後は風景の切り抜きが上から覆っていく。
+         この灯室（viewBox の 50,48）が上の光の回転軸になっているので、
+         位置を動かすときは CSS の --opening-lamp-* も合わせて見直す -->
+    <svg
+      class="opening-hero__lighthouse"
+      viewBox="0 0 100 240"
+      focusable="false"
+    >
+      <defs>
+        <radialGradient id="opening-lamp-glow">
+          <stop offset="0%" stop-color="#FFF7E6" stop-opacity=".92" />
+          <stop offset="38%" stop-color="#FFDCA8" stop-opacity=".62" />
+          <stop offset="100%" stop-color="#FFC98A" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- 灯室の光。塔より先に置いて、影の後ろから滲ませる -->
+      <circle cx="50" cy="48" r="34" fill="url(#opening-lamp-glow)" />
+
+      <g fill="#04101C">
+        <!-- 避雷針とドームの頭 -->
+        <rect x="48.8" y="0" width="2.4" height="9" />
+        <circle cx="50" cy="10.5" r="3.4" />
+        <!-- 屋根 -->
+        <path d="M27 37 L50 12 L73 37 Z" />
+        <!-- 灯室の枠（中は抜いて光を通す） -->
+        <path
+          d="M33 37 H67 V62 H33 Z M37 41 V58 H45 V41 Z M55 41 V58 H63 V41 Z"
+          fill-rule="evenodd"
+        />
+        <!-- 手すり付きの回廊 -->
+        <rect x="25" y="62" width="50" height="7" />
+        <rect x="28" y="55" width="1.8" height="7" />
+        <rect x="70.2" y="55" width="1.8" height="7" />
+        <!-- 塔。下へ向かって少しずつ太る -->
+        <path d="M36 69 H64 L70 213 H30 Z" />
+        <!-- 基壇と岩場 -->
+        <path d="M25 213 H75 L79 231 H21 Z" />
+        <path
+          d="M2 240 C11 229 19 232 28 229 C40 225 60 225 72 229 C81 232 89 229 98 240 Z"
+        />
+      </g>
+
+      <!-- 曙光を受ける右の縁。塔を平らな影にしない -->
+      <g fill="rgba(255, 214, 170, .22)">
+        <path d="M62.6 69 H64 L70 213 H67.6 Z" />
+        <path d="M71.6 62 H75 V69 H71.6 Z" />
+      </g>
+
+      <!-- 灯室の芯 -->
+      <circle cx="50" cy="48" r="7" fill="#FFF6E2" opacity=".95" />
+    </svg>
+
+    <!-- Hero の主役。ヘッダー内のロゴは初期状態では出さない -->
+    <h1 class="opening-hero__logo">
+      <img
+        src="assets/img/logo.png"
+        alt="SPOTLIGHT SHIZUOKA"
+        width="1034"
+        height="569"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </h1>
+
+    <!-- 放送のお知らせ。正円のシール。
+         外周を文字が回り、中心に局名と本文を文字で置く。
+         風景に切り替わる段で引く（main.js のタイムライン） -->
+    <p class="opening-hero__onair">
+      <svg
+        class="opening-hero__onair-ring"
+        viewBox="0 0 120 120"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <!-- 半径50の円。円周は約314なので、textLength をそこに
+               合わせて字間を自動で詰め、継ぎ目なく一周させる -->
+          <path
+            id="opening-onair-path"
+            fill="none"
+            d="M60,60 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"
+          />
+        </defs>
+        <text class="opening-hero__onair-ringtext">
+          <textPath
+            href="#opening-onair-path"
+            textLength="314"
+            lengthAdjust="spacing"
+          >
+            SBS RADIO ・ ON AIR ・ SBS RADIO ・ ON AIR ・
+          </textPath>
+        </text>
+      </svg>
+
+      <span class="opening-hero__onair-core">
+        <span class="opening-hero__onair-name">SBSラジオ</span>
+        <span class="opening-hero__onair-text">CM放送中！</span>
+      </span>
+    </p>
+
+    <!-- 紙面を切り抜いた穴。最後は全画面の風景になる -->
+    <div class="opening-window">
+      <!-- 演出時はこの中身を使わない（背後の風景を県の形で抜いて
+           モノクロにする / CSS 参照）。JS なし・モーション低減の
+           縦積みでだけ出るので、遅延読み込みにしてある -->
+      <div class="opening-window__visual">
+        <img
+          class="opening-window__image"
+          src="assets/img/hero-fuji-tea.webp"
+          srcset="
+            assets/img/hero-fuji-tea.webp    1600w,
+            assets/img/hero-fuji-tea-2x.webp 2600w
+          "
+          sizes="100vw"
+          alt=""
+          width="1600"
+          height="1067"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    </div>
+
+    <p class="opening-hero__scroll" aria-hidden="true">
+      <span>SCROLL</span><span class="opening-hero__scroll-line"></span>
+    </p>
+
+    <div class="opening-hero__overlay" aria-hidden="true"></div>
+
+    <div class="opening-hero__concept">
+      <h2 class="opening-hero__concept-title">
+        <span class="opening-hero__concept-line">静岡には、</span>
+        <span class="opening-hero__concept-line"
+          >未来を創造するリーダーがいる。</span
+        >
+        <span class="opening-hero__concept-line"
+          >地域に変革をもたらすプロフェッショナルたち、</span
+        >
+        <span class="opening-hero__concept-line"
+          >静岡から広がる無限の可能性。</span
+        >
+        <span class="opening-hero__concept-line"
+          >その最前線に迫る20のストーリー。</span
+        >
+      </h2>
+    </div>
+  </div>
+</section>

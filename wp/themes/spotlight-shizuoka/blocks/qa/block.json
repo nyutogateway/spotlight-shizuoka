@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "spotlight/qa",
+  "title": "質問・回答",
+  "category": "text",
+  "icon": "format-chat",
+  "description": "Q / A のバッジ付きで1問または1答を置く。",
+  "textdomain": "spotlight",
+  "attributes": {
+    "kind": { "type": "string", "default": "q" },
+    "text": { "type": "string", "source": "html", "selector": "p", "default": "" }
+  },
+  "supports": { "html": false, "reusable": false },
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}
