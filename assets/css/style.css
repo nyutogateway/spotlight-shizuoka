@@ -2149,10 +2149,11 @@ body {
 }
 
 @media (max-width: 900px) {
-  /* 縦に積むので1画面固定は外す */
+  /* 縦に積むので1画面固定は外す。ただし1グループは1画面に収めたいので、
+     余白は画面の高さに追従させて詰める（7vh だと背の低い端末で溢れた） */
   .p-voice {
     height: auto;
-    padding-block: 7vh;
+    padding-block: 4svh;
   }
 
   .p-voice__body,
@@ -2164,17 +2165,28 @@ body {
   .p-voice__lead,
   .p-voice--flip .p-voice__lead {
     order: 0;
-    /* 写真が 3:4 なので、幅がそのまま高さ（幅×4/3）になる。
-       画面の高さでも頭打ちにして、写真の高さを
-       37svh 前後（幅 28svh ×4/3）で止める。
-       レールの1枚より確実に大きく、かつ画面の3分の1で収まる大きさ */
-    max-width: min(260px, 28svh);
+    max-width: none;
   }
 
-  /* 縦積みでは幅の頭打ち（26vw）が効きすぎて、下のレールより
-     小さくなってしまう。先頭は枠いっぱいに使って一番大きく保つ */
   .p-voice__lead .c-card {
     width: 100%;
+  }
+
+  /* 先頭カードは写真を左に置いた横組みにする。縦積みのままだと
+     写真だけで「幅×4/3」の高さを取り、1グループが1画面に収まらない。
+     .c-card__link は display: block なので、ここで grid にして初めて
+     列の指定が効く（1100px / 760px / 600px にも同じ指定があるが、
+     display が block のままなので、そちらは効いていない） */
+  .p-voice__lead .c-card__link {
+    display: grid;
+    grid-template-columns: minmax(120px, 38%) 1fr;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* 横に並ぶので、写真の下へ送るための余白は要らない */
+  .p-voice__lead .c-card__info {
+    padding-top: 0;
   }
 
   .p-voice--flip .p-voice__rail {

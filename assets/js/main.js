@@ -431,11 +431,13 @@
        ・右＝1つ右へずれる＝前の人が戻ってくる
        大きい枠が左でも右でも（p-voice--flip）、カードが動く向きは
        押したボタンと必ず一致する */
+    /* 狭い画面では矢印の向きがそのまま進む向きになる（‹ が前、› が次）。
+       広い画面の「並びをどちらへずらすか」とは向きが逆になるので分けている */
     parts.left.addEventListener('click', function () {
-      if (narrow.matches) slide(1); else manual(1);
+      if (narrow.matches) slide(-1); else manual(1);
     });
     parts.right.addEventListener('click', function () {
-      if (narrow.matches) slide(-1); else manual(-1);
+      if (narrow.matches) slide(1); else manual(-1);
     });
 
     section.addEventListener('focusin', function () { focusHeld = true; });
@@ -454,9 +456,22 @@
       play();
     }
 
+    /* 読み上げ用の名前も動きに合わせる。狭い画面では「前／次」、
+       広い画面では並びをずらす向きそのもの */
+    function syncLabels() {
+      var leftText = parts.left.querySelector('.u-visually-hidden');
+      var rightText = parts.right.querySelector('.u-visually-hidden');
+      if (!leftText || !rightText) return;
+
+      leftText.textContent = narrow.matches ? '前のカードへ' : 'カードを左へ送る';
+      rightText.textContent = narrow.matches ? '次のカードへ' : 'カードを右へ送る';
+    }
+
     /* 幅をまたいだとき。広い画面へ戻ったら送った位置を戻してから回し直す
        （広い画面では横スクロールしないので、ずれたままだと直せない） */
     function syncMode() {
+      syncLabels();
+
       if (narrow.matches) {
         pause();
       } else {
@@ -465,6 +480,7 @@
       }
     }
 
+    syncLabels();
     if (narrow.addEventListener) narrow.addEventListener('change', syncMode);
     else if (narrow.addListener) narrow.addListener(syncMode);   // Safari 13 以前
   }
