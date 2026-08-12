@@ -426,6 +426,26 @@
     }
   }
 
+  /* 送りボタンの居場所を画面幅で入れ替える。
+     ・広い画面 … 見出しの中。見出しごと sticky で残るので、
+       セクションを読んでいる間ずっと手の届くところにある
+     ・狭い画面 … カードの下。見出しと同じ行に置くと、文字を持たない
+       ボタンのベースラインが下端で合ってしまい、丸だけ浮いて見える。
+       送る対象のすぐ下にあるほうが、何を動かすボタンかも分かる */
+  function placeVoiceNav(shell, nav) {
+    var narrow = window.matchMedia(MQ_NARROW);
+
+    function place() {
+      var host = narrow.matches ? shell.inner : shell.head;
+      // inner では body のあと（＝カードの下）に着く
+      if (nav.parentNode !== host) host.appendChild(nav);
+    }
+
+    place();
+    if (narrow.addEventListener) narrow.addEventListener('change', place);
+    else if (narrow.addListener) narrow.addListener(place);   // Safari 13 以前
+  }
+
   function renderVoices(container, data) {
     var frag = document.createDocumentFragment();
 
@@ -447,7 +467,6 @@
       });
       nav.appendChild(left);
       nav.appendChild(right);
-      shell.head.appendChild(nav);
 
       var body = el('div', 'p-voice__body');
       var lead = el('div', 'p-voice__lead');
@@ -455,6 +474,9 @@
       body.appendChild(lead);
       body.appendChild(rail);
       shell.inner.appendChild(body);
+
+      // 置き場所は画面幅しだい。body を入れたあとに呼ぶこと
+      placeVoiceNav(shell, nav);
 
       initVoiceCarousel(shell.section, group.entries.slice(), {
         body: body, lead: lead, rail: rail, left: left, right: right

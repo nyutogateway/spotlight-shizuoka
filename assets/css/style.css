@@ -2147,7 +2147,11 @@ body {
   .p-voice__lead,
   .p-voice--flip .p-voice__lead {
     order: 0;
-    max-width: 420px;
+    /* 写真が 3:4 なので、幅がそのまま高さ（幅×4/3）になる。
+       420px だと写真だけで 560px 積み上がり、下のレールが
+       1画面目に入らない。画面の高さでも頭打ちにして、
+       写真の高さを 45svh 前後（幅 34svh ×4/3）で止める */
+    max-width: min(320px, 34svh);
   }
 
   /* 縦積みでは幅の頭打ち（26vw）が効きすぎて、下のレールより
@@ -2173,6 +2177,13 @@ body {
   .p-voice__cards > .c-card {
     flex: 0 0 calc((100% - 32px) / 3);
     max-width: none;
+  }
+
+  /* 送りボタンはカードの下（main.js が見出しから移す）。
+     カードの右端と縦線を揃えたいので右へ寄せる */
+  .p-voice__nav {
+    justify-content: flex-end;
+    margin-top: 26px;
   }
 }
 
