@@ -760,6 +760,13 @@ body {
     text-align: center;
   }
 
+  /* 「MENU」の見出しは出さない。狭い画面では一覧が消えて
+     この4つしか残らないので、何の並びかは説明しなくても分かる。
+     ドロワー自体が nav[aria-label="メニュー"] なので読み上げにも要らない */
+  .c-drawer__label {
+    display: none;
+  }
+
   .c-drawer__menu {
     flex-direction: column;
     align-items: center;
