@@ -378,13 +378,37 @@
 
     paint();
 
+    /* 狭い画面はレールを指で送る（横スクロール＋スナップは CSS 側）。
+       自動で入れ替えると、スワイプの最中に描き直しが走って位置が飛ぶので、
+       narrow の間は回さない。先頭の枠はグループの1人目に据え置きになる */
+    var narrow = window.matchMedia(MQ_NARROW);
+
+    /* ボタンはレールを1枚ぶん送る。送り幅は隣り合うカードの左端の差から
+       採るので、CSS の gap を JS 側に写し取らなくて済む */
+    function slide(direction) {
+      var list = parts.rail.querySelector('.p-voice__cards');
+      var first = list && list.children[0];
+      if (!first) return;
+
+      var second = list.children[1];
+      var step = second
+        ? second.getBoundingClientRect().left - first.getBoundingClientRect().left
+        : first.getBoundingClientRect().width;
+
+      parts.rail.scrollBy({
+        left: step * direction,
+        behavior: prefersReducedMotion ? 'auto' : 'smooth'
+      });
+    }
+
     /* 自動遷移。カードにカーソルを載せても止めない（送りは一定で回し続ける）。
        キーボードで中を辿っている間だけは、足元のカードが入れ替わらないよう待つ */
     var timer = null;
     var focusHeld = false;
+    var visible = true;
 
     function play() {
-      if (prefersReducedMotion || timer) return;
+      if (prefersReducedMotion || narrow.matches || timer) return;
       timer = window.setInterval(function () {
         if (!focusHeld) rotate(1);
       }, VOICE_AUTO_MS);
@@ -407,8 +431,12 @@
        ・右＝1つ右へずれる＝前の人が戻ってくる
        大きい枠が左でも右でも（p-voice--flip）、カードが動く向きは
        押したボタンと必ず一致する */
-    parts.left.addEventListener('click', function () { manual(1); });
-    parts.right.addEventListener('click', function () { manual(-1); });
+    parts.left.addEventListener('click', function () {
+      if (narrow.matches) slide(1); else manual(1);
+    });
+    parts.right.addEventListener('click', function () {
+      if (narrow.matches) slide(-1); else manual(-1);
+    });
 
     section.addEventListener('focusin', function () { focusHeld = true; });
     section.addEventListener('focusout', function () { focusHeld = false; });
@@ -417,13 +445,28 @@
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting) play();
+          visible = entry.isIntersecting;
+          if (visible) play();
           else pause();
         });
       }, { threshold: 0.25 }).observe(section);
     } else {
       play();
     }
+
+    /* 幅をまたいだとき。広い画面へ戻ったら送った位置を戻してから回し直す
+       （広い画面では横スクロールしないので、ずれたままだと直せない） */
+    function syncMode() {
+      if (narrow.matches) {
+        pause();
+      } else {
+        parts.rail.scrollLeft = 0;
+        if (visible) play();
+      }
+    }
+
+    if (narrow.addEventListener) narrow.addEventListener('change', syncMode);
+    else if (narrow.addListener) narrow.addListener(syncMode);   // Safari 13 以前
   }
 
   /* 送りボタンの居場所を画面幅で入れ替える。

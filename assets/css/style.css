@@ -682,8 +682,12 @@ body {
   color: var(--color-blue-light);
 }
 
-/* ドロワーの足回り。フッターと同じ顔ぶれを、同じ扱いで並べる */
+/* ドロワーの足回り。フッターと同じ顔ぶれを、同じ扱いで並べる。
+   揃え方もフッター（.l-footer__inner）に合わせて中央に置く */
 .c-drawer__foot {
+  display: grid;
+  justify-items: center;
+  text-align: center;
   margin-top: 72px;
   padding-top: 44px;
   border-top: 1px solid rgba(255, 255, 255, .18);
@@ -750,9 +754,22 @@ body {
     display: none;
   }
 
+  /* 足回りが中央なので、見出しとメニューもそこへ揃える。
+     広い画面では記事一覧が左揃えの格子で並ぶため、こちらは動かさない */
+  .c-drawer__section {
+    text-align: center;
+  }
+
   .c-drawer__menu {
     flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* 縦に4つ並ぶだけの画面なので、もっと張らせる。
+     既定の 4vw は狭い画面だと下限（28px）に張り付いて効かない */
+  .c-drawer__menu a {
+    font-size: clamp(36px, 10vw, 52px);
   }
 
   /* 一覧が消えて中身が短くなるので、足回りは下端へ送る。
@@ -2148,10 +2165,10 @@ body {
   .p-voice--flip .p-voice__lead {
     order: 0;
     /* 写真が 3:4 なので、幅がそのまま高さ（幅×4/3）になる。
-       420px だと写真だけで 560px 積み上がり、下のレールが
-       1画面目に入らない。画面の高さでも頭打ちにして、
-       写真の高さを 45svh 前後（幅 34svh ×4/3）で止める */
-    max-width: min(320px, 34svh);
+       画面の高さでも頭打ちにして、写真の高さを
+       37svh 前後（幅 28svh ×4/3）で止める。
+       レールの1枚より確実に大きく、かつ画面の3分の1で収まる大きさ */
+    max-width: min(260px, 28svh);
   }
 
   /* 縦積みでは幅の頭打ち（26vw）が効きすぎて、下のレールより
@@ -2165,18 +2182,35 @@ body {
   }
 
   /* 横1列だと小さくなりすぎるので折り返す */
+  /* 残り4枚は指で横に送る。折り返して2段にすると縦に伸び、
+     4枚目を隠すとその人が存在ごと消えるので、送れるようにする。
+     縦は overflow-y が auto に落ちるため、ホバー時の拡大が
+     切れないよう下に少しだけ余白を持たせる */
+  .p-voice__rail {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .p-voice__rail::-webkit-scrollbar {
+    display: none;
+  }
+
   .p-voice__cards {
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-wrap: nowrap;
+    gap: 14px;
   }
 
   .p-voice--flip .p-voice__cards {
     justify-content: flex-start;
   }
 
+  /* 端が覗く幅にして「まだ続く」と分かるようにする */
   .p-voice__cards > .c-card {
-    flex: 0 0 calc((100% - 32px) / 3);
+    flex: 0 0 30%;
     max-width: none;
+    scroll-snap-align: start;
   }
 
   /* 送りボタンはカードの下（main.js が見出しから移す）。
@@ -2187,18 +2221,10 @@ body {
   }
 }
 
-/* タブレット幅は3枚を1列に。4枚目が1枚だけ次の行に残ると
-   間延びするので出さない（送りで回ってくる） */
-@media (min-width: 561px) and (max-width: 900px) {
-  .p-voice__cards > .c-card:nth-child(n + 4) {
-    display: none;
-  }
-}
-
-/* ここから下は3列だと1枚が小さすぎるので2列2段に戻す */
+/* ここから下は 30% だと1枚が小さすぎるので、2枚と少しが見える幅にする */
 @media (max-width: 560px) {
   .p-voice__cards > .c-card {
-    flex: 0 0 calc((100% - 16px) / 2);
+    flex: 0 0 42%;
   }
 }
 
